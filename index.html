@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diary Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1b1b1b;
+    --paper: #f0f1eb;
+    --rule: #d6d7d1;
+    --ink: #212121;
+    --intro: #8aa5db;
+    --d1: #e6c0d2;
+    --d2: #e8da5c;
+    --d3: #4fae5c;
+    --d4: #e0832e;
+    --rough: #d1233d;
+    --accent: var(--intro);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body { display: grid; place-items: center; font-family: Inter, sans-serif; }
+
+  /* Design frame is 1280×832; scaled to fit the window so the page never scrolls */
+  #frame { position: absolute; left: 50%; top: 50%; width: 1280px; height: 832px; perspective: 2400px; }
+
+  .mono { font-family: 'Fira Code', monospace; font-size: 10px; letter-spacing: .5px; color: #000; }
+  .q { font-size: 12px; letter-spacing: -.72px; color: var(--ink); }
+
+  /* ---------- paper page ---------- */
+  .page { position: relative; width: 432px; height: 527px; background: var(--paper); overflow: hidden; }
+  .page.l { box-shadow: 4px 4px 12px rgba(0,0,0,.12); }
+  .page.r { box-shadow: -4px 4px 12px rgba(0,0,0,.12); }
+  .holes { position: absolute; top: calc(50% - 9.5px); transform: translateY(-50%); width: 10px; height: 460px;
+    background: radial-gradient(circle at 5px 5px, var(--hole, var(--accent)) 5px, transparent 5.5px) 0 0 / 10px 75px repeat-y; }
+  .page.l .holes { left: 413px; }
+  .page.r .holes { left: 7px; }
+  .margin { position: absolute; top: 16px; height: 492px; width: 1px; background: var(--rule); }
+  .page.l .margin { left: 406px; }
+  .page.r .margin { left: 24px; }
+  .page .label { position: absolute; top: 12px; }
+  .page.l .label { left: 12px; }
+  .page.r .label { right: 15px; }
+
+  /* question sections on day pages */
+  .qs { position: absolute; top: 37px; width: 403px; display: flex; flex-direction: column; }
+  .page.l .qs { left: 3px; }
+  .page.r .qs { left: 24px; }
+  .qs section { height: 157px; border-top: 1px solid var(--rule); padding: 8px 13px 0; display: flex; flex-direction: column; }
+  .qs textarea { flex: 1; margin-top: 6px; border: 0; background: transparent; resize: none; outline: none;
+    font: 13px/1.5 Inter, sans-serif; color: var(--ink); letter-spacing: -.3px; }
+
+  /* rough work grid */
+  .grid { position: absolute; top: 37px; width: 393px; height: 471px; border: 1px solid #cfd0cb;
+    background-image: linear-gradient(#e3e4de 1px, transparent 1px), linear-gradient(90deg, #e3e4de 1px, transparent 1px);
+    background-size: 13.1px 13.1px; }
+  .page.l .grid { left: 12px; }
+  .page.r .grid { left: 24px; }
+  .grid textarea { width: 100%; height: 100%; border: 0; background: transparent; resize: none; outline: none; padding: 10px;
+    font: 13px/1.5 Inter, sans-serif; color: var(--ink); }
+
+  /* ---------- binder (open spread) ---------- */
+  #binder { position: absolute; left: 184px; top: 140px; width: 913px; height: 551px; background: var(--accent);
+    display: flex; gap: 13px; align-items: center; padding: 12px 24px 12px 12px; transition: background .4s; }
+  #binder .slot { width: 432px; height: 527px; position: relative; }
+
+  /* intro spread extras */
+  .card-hello { position: absolute; left: 8px; top: 16px; width: 389px; height: 243px; background: #eab9c2; }
+  .card-hello p { position: absolute; left: 22px; top: 22px; }
+  .card-hello img { position: absolute; left: 27px; top: 50px; width: 334px; height: 167px; object-fit: cover; }
+  .card-instr { position: absolute; left: 226px; top: 282px; width: 171px; height: 213px; background: #e8d17d; color: #4b4b4b; padding: 15px 14px; }
+  .card-instr p { font-size: 12px; letter-spacing: -.72px; margin-bottom: 12px; }
+  .card-instr ul { font-size: 10px; letter-spacing: -.6px; padding-left: 15px; width: 131px; }
+  .paperclip { position: absolute; left: 293px; top: -32px; width: 90px; height: 112px; object-fit: cover; pointer-events: none; }
+  .belongs { position: absolute; left: calc(50% + 20px); top: calc(50% - 22.5px); transform: translate(-50%, -50%);
+    width: 172px; height: 126px; border: 1px solid rgba(75,75,75,.2); }
+  .belongs p { position: absolute; left: 32.5px; top: 28.5px; font-size: 12px; letter-spacing: -.72px; }
+  .belongs input { position: absolute; left: 24.5px; top: 72px; width: 122px; border: 0; border-bottom: 1px dashed #c9cac4;
+    background: transparent; outline: none; font: 12px Inter, sans-serif; text-align: center; padding-bottom: 3px; }
+  .ms-logo { position: absolute; left: 150px; top: 304px; width: 52px; height: 29px; object-fit: cover; }
+
+  /* ---------- cover ---------- */
+  #cover { position: absolute; left: 417px; top: 140px; width: 466px; height: 551px;
+    cursor: pointer; transform-origin: left center; transform-style: preserve-3d; z-index: 3; }
+  #cover > .side { position: absolute; top: 0; height: 100%; backface-visibility: hidden; }
+  #cover > .front { left: 0; width: 100%; background: var(--paper); }
+  /* Inside of the cover: once swung over the spine it lands exactly on the binder's left half
+     (binder x 184–640 ↔ cover x -9–447), drawn the same so the hand-off is seamless */
+  #cover > .rear { left: -9px; width: 456px; background: var(--intro); transform: rotateY(180deg); }
+  #cover > .rear > .slot { position: absolute; left: 12px; top: 12px; width: 432px; height: 527px; }
+  #cover .holes { left: 7px; top: calc(50% - 11.5px); --hole: #1b1b1b; }
+  #cover .margin { left: 24px; top: 8px; height: 528px; }
+  #cover .hr { position: absolute; left: 25px; width: 439px; height: 1px; background: var(--rule); }
+  .title { position: absolute; left: calc(50% + .5px); top: calc(50% - 50px); transform: translate(-50%, -50%);
+    width: 101px; font-size: 40px; letter-spacing: -2.4px; line-height: 1.21; color: #000; }
+  .title span { display: block; margin-bottom: -7px; }
+  #cover .gt { position: absolute; left: 183px; top: 270px; width: 38px; height: 21px; object-fit: cover; }
+  #cover .ms { position: absolute; left: 229px; top: 266px; width: 52px; height: 29px; object-fit: cover; }
+  #cover .foot { position: absolute; top: 529px; font-size: 9px; letter-spacing: .45px; }
+
+  /* Opening: cover slides right until its edge sits on the spine (+214px), then swings over it.
+     Closing plays the same steps backwards. */
+  #binder, .paperclip { transition: opacity .25s; }
+  .paperclip { z-index: 4; }
+  body.closed #binder, body.closed .paperclip { opacity: 0; pointer-events: none; }
+  body:not(.closed) #binder { transition-delay: .4s; }
+  body:not(.closed) .paperclip { transition-delay: 1.3s; }
+  body.closed.was-open .paperclip { transition-duration: 0s; }
+  body.closed.was-open #binder { transition-delay: .9s; }
+  /* the binder's left half only exists once the cover's inside lands on it */
+  body:not(.closed) #binder { animation: binderLeftOpen 1.4s step-end forwards; }
+  body.closed.was-open #binder { animation: binderLeftShut 1.4s step-start forwards; }
+  @keyframes binderLeftOpen { 0% { clip-path: inset(0 0 0 456px); } 100% { clip-path: inset(0); } }
+  @keyframes binderLeftShut { 0%, 100% { clip-path: inset(0 0 0 456px); } }
+
+  /* Same physics as the page turn: lift, sag at the top of the arc, light falling off the
+     sheet as it stands up, and a shadow on the page it uncovers */
+  body:not(.closed) #cover { animation: coverOpen 1.4s linear forwards; pointer-events: none; }
+  body.closed.was-open #cover { animation: coverShut 1.4s linear forwards; }
+  @keyframes coverOpen {
+    0%   { transform: none; animation-timing-function: cubic-bezier(.45,.05,.3,1); }
+    32%  { transform: translateX(214px); animation-timing-function: cubic-bezier(.4,0,.6,1); }
+    66%  { transform: translateX(214px) rotateY(-90deg) translateZ(14px) skewY(-1.5deg); animation-timing-function: cubic-bezier(.3,0,.25,1); }
+    99%  { transform: translateX(214px) rotateY(-180deg); visibility: visible; }
+    100% { transform: translateX(214px) rotateY(-180deg); visibility: hidden; }
+  }
+  @keyframes coverShut {
+    0%   { transform: translateX(214px) rotateY(-180deg); animation-timing-function: cubic-bezier(.4,0,.6,1); }
+    34%  { transform: translateX(214px) rotateY(-90deg) translateZ(14px) skewY(-1.5deg); animation-timing-function: cubic-bezier(.3,0,.25,1); }
+    68%  { transform: translateX(214px); animation-timing-function: cubic-bezier(.45,.05,.3,1); }
+    100% { transform: none; }
+  }
+  #cover .shade { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+  #cover .front .shade { background: linear-gradient(90deg, rgba(0,0,0,.35), rgba(0,0,0,.05)); }
+  #cover .rear .shade  { background: linear-gradient(90deg, rgba(0,0,0,.05), rgba(0,0,0,.35)); }
+  body:not(.closed) #cover .front .shade { animation: coverFrontShade 1.4s linear forwards; }
+  body:not(.closed) #cover .rear .shade  { animation: coverRearShade 1.4s linear forwards; }
+  body.closed.was-open #cover .front .shade { animation: coverFrontShadeShut 1.4s linear forwards; }
+  body.closed.was-open #cover .rear .shade  { animation: coverRearShadeShut 1.4s linear forwards; }
+  @keyframes coverFrontShade     { 0%, 32% { opacity: 0; } 66%, 100% { opacity: 1; } }
+  @keyframes coverRearShade      { 0%, 66% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes coverFrontShadeShut { 0%, 34% { opacity: 1; } 68%, 100% { opacity: 0; } }
+  @keyframes coverRearShadeShut  { 0% { opacity: 0; } 34%, 100% { opacity: 1; } }
+  body:not(.closed) #right::after { content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 4;
+    background: linear-gradient(90deg, rgba(0,0,0,.3), transparent 70%); animation: coverDrop 1.4s linear forwards; }
+  @keyframes coverDrop { 0%, 32% { opacity: 1; } 100% { opacity: 0; } }
+
+  /* ---------- tabs ---------- */
+  /* Tabs share the cover's keyframe timing for the slide, so they stay locked to its edge */
+  #tabs { position: absolute; left: 883px; top: 168px; }
+  body:not(.closed) #tabs { animation: tabsOpen 1.4s linear forwards; }
+  body.closed.was-open #tabs { animation: tabsShut 1.4s linear forwards; }
+  @keyframes tabsOpen {
+    0%   { transform: none; animation-timing-function: cubic-bezier(.45,.05,.3,1); }
+    32%, 100% { transform: translateX(214px); }
+  }
+  @keyframes tabsShut {
+    0%, 68% { transform: translateX(214px); animation-timing-function: cubic-bezier(.45,.05,.3,1); }
+    100% { transform: none; }
+  }
+  .tab { position: absolute; left: 0; width: 19px; height: 81px; border: 0; cursor: pointer; background: var(--c);
+    clip-path: polygon(0 0, 100% 16%, 100% 76%, 0 100%); transition: width .2s; }
+  .tab:hover, .tab.on { width: 24px; }
+  .tab.on { z-index: 2; }
+  .tab span { position: absolute; left: 3px; top: 50%; width: 13px; transform: translateY(-50%) rotate(-90deg);
+    display: flex; justify-content: center; white-space: nowrap; }
+
+  [hidden] { display: none !important; }
+
+  /* ---------- media ---------- */
+  .media-layer { position: absolute; inset: 0; pointer-events: none; }
+  .media { position: absolute; pointer-events: auto; cursor: grab; touch-action: none; }
+  .media:active { cursor: grabbing; }
+  .media img, .media video { display: block; width: 100%; height: auto; max-height: 300px; object-fit: cover; user-select: none; -webkit-user-drag: none; }
+  .media.image, .media.video { box-shadow: 1px 2px 6px rgba(0,0,0,.15); }
+  .file-chip { display: flex; align-items: center; gap: 6px; padding: 7px 10px; background: var(--paper); border: 1px solid #cfd0cb;
+    font: 11px Inter, sans-serif; color: var(--ink); text-decoration: none; letter-spacing: -.3px; max-width: 300px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-chip img { width: 14px; height: 14px; flex: none; }
+  .media .rm { position: absolute; top: -8px; right: -8px; width: 18px; height: 18px; border-radius: 50%; border: 0;
+    background: var(--bg); color: var(--paper); font-size: 12px; line-height: 18px; cursor: pointer; opacity: 0; transition: opacity .15s; }
+  .media:hover .rm, .media .rm:focus-visible { opacity: 1; }
+  .turn .rm { display: none; }
+
+  /* add-media button + menu, in binder coordinates from the design */
+  .fab, .fab-menu { position: absolute; z-index: 6; background: var(--paper); border: 0; border-radius: 44px;
+    box-shadow: 2.5px 2.5px 7.5px rgba(0,0,0,.25); }
+  .fab { left: 830px; top: 478.5px; width: 40px; height: 40px; display: grid; place-items: center; cursor: pointer;
+    transition: transform .2s; }
+  .fab img { transition: transform .2s; }
+  .fab[aria-expanded="true"] img { transform: rotate(45deg); }
+  .fab:hover { transform: scale(1.06); }
+  .fab-menu { left: 826px; top: 305px; width: 46px; padding: 18px 0; display: flex; flex-direction: column; gap: 18px;
+    transform-origin: 50% 100%; animation: menuIn .18s ease-out; }
+  @keyframes menuIn { from { opacity: 0; transform: translateY(8px) scale(.95); } }
+  .fab-menu button { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 0; background: none;
+    cursor: pointer; font: 10px Inter, sans-serif; letter-spacing: -.6px; color: var(--bg); }
+  .fab-menu button:hover { opacity: .6; }
+  #binder:not(.can-add) .fab, #binder:not(.can-add) .fab-menu { display: none; }
+
+  /* ---------- controls ---------- */
+  .controls { position: absolute; left: 50%; top: 722px; transform: translateX(-50%); display: flex; gap: 22px; z-index: 6; }
+  .controls button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--paper); color: var(--ink);
+    font-size: 20px; cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,.35); transition: transform .15s, opacity .2s; }
+  .controls button:hover:not(:disabled) { transform: scale(1.1); }
+  .controls button:disabled { opacity: .3; cursor: default; }
+
+  /* ---------- page-turn ---------- */
+  .turn { position: absolute; top: 152px; width: 432px; height: 527px; z-index: 5; pointer-events: none;
+    transform-style: preserve-3d; --dur: .95s; }
+  .turn.fwd { left: 641px; transform-origin: -6.5px center; animation: turnFwd var(--dur) cubic-bezier(.3,.05,.25,1) forwards; }
+  .turn.back { left: 196px; transform-origin: 438.5px center; animation: turnBack var(--dur) cubic-bezier(.3,.05,.25,1) forwards; }
+  .turn .side { position: absolute; inset: 0; backface-visibility: hidden; }
+  .turn .rear { transform: rotateY(180deg); }
+  .turn .page { box-shadow: none; }
+  .turn .holes { --hole: #1b1b1b; }
+  /* lifts slightly off the binder and sags at the top of its arc, like real paper */
+  @keyframes turnFwd {
+    0%   { transform: rotateY(0) translateZ(0); }
+    50%  { transform: rotateY(-90deg) translateZ(10px) skewY(-1.2deg); }
+    100% { transform: rotateY(-180deg) translateZ(0); }
+  }
+  @keyframes turnBack {
+    0%   { transform: rotateY(0) translateZ(0); }
+    50%  { transform: rotateY(90deg) translateZ(10px) skewY(1.2deg); }
+    100% { transform: rotateY(180deg) translateZ(0); }
+  }
+  /* light falls off the sheet as it stands up, and comes back as it lies down */
+  .shade { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
+  .fwd .front .shade  { background: linear-gradient(90deg, rgba(0,0,0,.05), rgba(0,0,0,.35)); animation: shadeOut var(--dur) forwards; }
+  .fwd .rear .shade   { background: linear-gradient(90deg, rgba(0,0,0,.35), rgba(0,0,0,.05)); animation: shadeIn var(--dur) forwards; }
+  .back .front .shade { background: linear-gradient(90deg, rgba(0,0,0,.35), rgba(0,0,0,.05)); animation: shadeOut var(--dur) forwards; }
+  .back .rear .shade  { background: linear-gradient(90deg, rgba(0,0,0,.05), rgba(0,0,0,.35)); animation: shadeIn var(--dur) forwards; }
+  @keyframes shadeOut { 0% { opacity: 0; } 50% { opacity: 1; } 100% { opacity: 1; } }
+  @keyframes shadeIn  { 0% { opacity: 1; } 50% { opacity: 1; } 100% { opacity: 0; } }
+  /* shadow the lifting sheet casts on the page it uncovers */
+  .drop { position: absolute; inset: 0; pointer-events: none; z-index: 4; animation: drop var(--dur, .95s) forwards; }
+  #right .drop { background: linear-gradient(90deg, rgba(0,0,0,.28), transparent 70%); }
+  #left .drop  { background: linear-gradient(270deg, rgba(0,0,0,.28), transparent 70%); }
+  @keyframes drop { 0% { opacity: 1; } 60% { opacity: .5; } 100% { opacity: 0; } }
+</style>
+</head>
+<body class="closed">
+<div id="frame">
+  <div id="cover" title="Open diary">
+   <div class="side front">
+    <div class="holes"></div>
+    <div class="margin"></div>
+    <div class="hr" style="top:30px"></div>
+    <div class="hr" style="top:521px"></div>
+    <div class="title"><span>Diary</span>Study</div>
+    <img class="gt" src="assets/georgia-tech.png" alt="Georgia Tech">
+    <img class="ms" src="assets/microsoft.png" alt="Microsoft">
+    <p class="mono foot" style="left:40px">[ Nov XX - Nov XX ]</p>
+    <p class="mono foot" style="left:405px">[ 2026 ]</p>
+    <i class="shade"></i>
+   </div>
+   <div class="side rear"><div class="slot" id="coverInside"></div><i class="shade"></i></div>
+  </div>
+
+  <div id="binder">
+    <div class="slot" id="left"></div>
+    <div class="slot" id="right"></div>
+    <div class="fab-menu" id="fabMenu" hidden>
+      <button data-pick="image"><img src="assets/icon-image.svg" alt="" width="16" height="16">Image</button>
+      <button data-pick="file"><img src="assets/icon-file.svg" alt="" width="16" height="16">File</button>
+      <button data-pick="video"><img src="assets/icon-video.svg" alt="" width="15" height="15">Video</button>
+    </div>
+    <button class="fab" id="fab" aria-label="Add media" aria-expanded="false"><img src="assets/icon-plus.svg" alt="" width="24" height="24"></button>
+    <input type="file" id="pick-image" accept="image/*" multiple hidden>
+    <input type="file" id="pick-file" multiple hidden>
+    <input type="file" id="pick-video" accept="video/*" multiple hidden>
+  </div>
+  <img class="paperclip" src="assets/paperclip.png" alt="" style="left:489px;top:120px">
+
+  <div id="tabs"></div>
+
+  <div class="controls">
+    <button id="prev" aria-label="Previous page">‹</button>
+    <button id="close" aria-label="Close diary">✕</button>
+    <button id="next" aria-label="Next page">›</button>
+  </div>
+</div>
+
+<script>
+  const tabList = [
+    { label: 'Intro', color: 'var(--intro)' },
+    { label: '01', color: 'var(--d1)' },
+    { label: '02', color: 'var(--d2)' },
+    { label: '03', color: 'var(--d3)' },
+    { label: '04', color: 'var(--d4)' },
+    { label: 'Rough', color: 'var(--rough)' },
+  ];
+  // Every spread in reading order; each day is a questions spread followed by its own rough spreads
+  const ROUGH_SPREADS = 2;
+  const sections = [
+    { id: 'intro', kind: 'intro', tab: 0 },
+    ...[1, 2, 3, 4].flatMap(day => [
+      { id: 'd' + day, kind: 'day', day, tab: day },
+      ...Array.from({ length: ROUGH_SPREADS }, (_, i) =>
+        ({ id: `d${day}r${i ? i + 1 : ''}`, kind: 'rough', day, tab: day })),
+    ]),
+    { id: 'rough', kind: 'rough', tab: 5 },
+  ];
+  sections.forEach(s => s.color = tabList[s.tab].color);
+  const questions = [
+    ['What were you trying to accomplish?', 'What is the workflow?', 'What resources helped you create/refine it?'],
+    ['Which were most useful?', 'Why could it be useful to another designer?', 'Other thoughts'],
+  ];
+
+  // Storage: Supabase. Each participant opens their own link, ?t=<token>, and the
+  // database functions only accept that token. Without a token or a connection,
+  // answers are kept in this browser's localStorage instead.
+  const SUPA_URL = 'https://uyvcbowaghqnlmrfuece.supabase.co';
+  const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5dmNib3dhZ2hxbmxtcmZ1ZWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NTM3ODIsImV4cCI6MjEwODUyOTc4Mn0.FqqnzGzIgOuwKCQOL9NjLU__6tkbgPky3h9K2Zbg5jQ';
+  const TOKEN = new URLSearchParams(location.search).get('t');
+  const AUTH = { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` };
+
+  let saved = {};
+  let online = false;
+  const local = () => { try { localStorage.setItem('diary-study-' + (TOKEN || 'anon'), JSON.stringify(saved)); } catch {} };
+
+  async function rpc(fn, body, keepalive = false) {
+    const res = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
+      method: 'POST',
+      keepalive,
+      headers: { ...AUTH, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_token: TOKEN, ...body }),
+    });
+    if (!res.ok) throw new Error(`${fn} ${res.status}: ${await res.text()}`);
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  }
+
+  const ready = (async () => {
+    if (TOKEN) {
+      try {
+        const [name, rows] = await Promise.all([rpc('load_my_name', {}), rpc('load_my_answers', {})]);
+        saved.name = name ?? '';
+        rows.forEach(r => { saved[r.question_key] = r.answer; });
+        online = true;
+        return;
+      } catch (e) { console.warn('could not load saved answers, using local copy', e); }
+    }
+    try { saved = JSON.parse(localStorage.getItem('diary-study-' + (TOKEN || 'anon')) || '{}'); } catch {}
+  })();
+
+  // Each change is sent 800 ms after the last keystroke. Pending changes are sent
+  // when the page is hidden, so closing the tab right after typing doesn't lose them.
+  const timers = {};
+  function send(key, keepalive = false) {
+    const call = key === 'name'
+      ? rpc('save_name', { p_name: saved.name ?? '' }, keepalive)
+      : rpc('save_response', { p_key: key, p_answer: saved[key] ?? '' }, keepalive);
+    return call.catch(e => { console.warn('save failed, keeping a local copy', e); local(); });
+  }
+  function persist(key) {
+    if (!online) return local();
+    clearTimeout(timers[key]);
+    timers[key] = setTimeout(() => { delete timers[key]; send(key); }, 800);
+  }
+  addEventListener('pagehide', () => {
+    for (const key of Object.keys(timers)) {
+      clearTimeout(timers[key]);
+      delete timers[key];
+      send(key, true);
+    }
+  });
+  const esc = s => (s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const field = key => `data-key="${key}"`;
+
+  const frame = (side, inner) =>
+    `<div class="page ${side}"><div class="holes"></div><div class="margin"></div>${inner}</div>`;
+
+  function pages(s) {
+    if (s.id === 'intro') return [
+      `<div class="card-hello"><p class="q">Hello! Thank you for participating in this diary study</p>
+         <img src="assets/welcome-image.png" alt=""></div>
+       <div class="card-instr"><p>Instructions:</p><ul>
+         <li>Log into the diary by 5pm everyday</li><li>lorem ipsum</li><li>lorem ipum</li></ul></div>`,
+      frame('r', `<div class="belongs"><p>This diary belongs to</p>
+         <input ${field('name')} value="${esc(saved.name)}" aria-label="Your name"></div>
+         <img class="ms-logo" src="assets/microsoft.png" alt="Microsoft">`),
+    ];
+    if (s.kind === 'rough') return ['l', 'r'].map(side => {
+      const key = `${s.id}-${side}`;
+      return frame(side, `<p class="mono label">[ Rough Work ]</p>
+       <div class="grid" data-media="${key}"><textarea ${field(key)} aria-label="Rough work">${esc(saved[key])}</textarea>
+         <div class="media-layer"></div></div>`);
+    });
+    const day = String(s.day).padStart(2, '0');
+    return ['l', 'r'].map((side, p) => frame(side,
+      `<p class="mono label">[ Day ${day} ]</p><div class="qs">${questions[p].map((q, i) => {
+        const key = `${s.id}-${p}-${i}`;
+        return `<section><p class="q">${q}</p><textarea ${field(key)} aria-label="${q}">${esc(saved[key])}</textarea></section>`;
+      }).join('')}</div>`));
+  }
+
+  const left = document.getElementById('left');
+  const right = document.getElementById('right');
+  const binder = document.getElementById('binder');
+  const clip = document.querySelector('.paperclip');
+  const tabs = document.getElementById('tabs');
+  let current = -1; // -1 = closed cover
+
+  tabs.innerHTML = tabList.map((t, i) =>
+    `<button class="tab" style="--c:${t.color};top:${i * 70}px" data-i="${i}" aria-label="${t.label}"><span class="mono">${t.label}</span></button>`).join('');
+  tabs.onclick = e => {
+    const t = e.target.closest('.tab');
+    if (t) go(sections.findIndex(s => s.tab === +t.dataset.i));
+  };
+  document.getElementById('cover').onclick = () => go(0);
+  ready.then(() => { document.getElementById('coverInside').innerHTML = pages(sections[0])[0]; });
+
+  const [prevBtn, closeBtn, nextBtn] = ['prev', 'close', 'next'].map(id => document.getElementById(id));
+  prevBtn.onclick = () => go(current - 1);
+  closeBtn.onclick = () => go(-1);
+  nextBtn.onclick = () => go(current + 1);
+  prevBtn.disabled = closeBtn.disabled = true;
+
+  binder.addEventListener('input', e => {
+    const k = e.target.dataset.key;
+    if (k) { saved[k] = e.target.value; persist(k); }
+  });
+
+  // Paper sound: only seconds 0.5–1.5 of the clip, with a short fade so it doesn't click off
+  const SOUND_FROM = .5, SOUND_TO = 1.5, FADE = .15;
+  const turnSound = new Audio('assets/page-turn.mp3');
+  turnSound.preload = 'auto';
+  let soundTimer;
+  function playTurnSound() {
+    clearInterval(soundTimer);
+    turnSound.currentTime = SOUND_FROM;
+    turnSound.volume = 1;
+    turnSound.play().catch(() => {});
+    soundTimer = setInterval(() => {
+      const t = turnSound.currentTime;
+      if (t >= SOUND_TO) { turnSound.pause(); clearInterval(soundTimer); }
+      else if (t > SOUND_TO - FADE) turnSound.volume = Math.max(0, (SOUND_TO - t) / FADE);
+    }, 20);
+  }
+
+  let finishTurn = null;
+
+  // A two-sided sheet lifts off one side and lands on the other. The side it lands on keeps
+  // its old content until the sheet covers it, and the side it uncovers gets a shadow that lifts away.
+  function turn(fwd, nextLeft, nextRight) {
+    const [from, to] = fwd ? [right, left] : [left, right];
+    const t = document.createElement('div');
+    t.className = 'turn ' + (fwd ? 'fwd' : 'back');
+    t.innerHTML = `<div class="side front">${from.innerHTML}<i class="shade"></i></div>
+                   <div class="side rear">${fwd ? nextLeft : nextRight}<i class="shade"></i></div>`;
+    from.innerHTML = (fwd ? nextRight : nextLeft) + '<i class="drop"></i>';
+    document.getElementById('frame').appendChild(t);
+    finishTurn = () => {
+      finishTurn = null;
+      t.remove();
+      to.innerHTML = fwd ? nextLeft : nextRight;
+      from.querySelector('.drop')?.remove();
+      fillMedia();
+    };
+    fillMedia();
+    t.addEventListener('animationend', e => { if (e.target === t) finishTurn?.(); });
+  }
+
+  async function go(n) {
+    n = Math.max(-1, Math.min(sections.length - 1, n));
+    if (n === current) return;
+    finishTurn?.(); // a quick second click snaps the previous turn into place
+    const prev = current;
+    current = n;
+    playTurnSound();
+    document.body.classList.toggle('closed', n < 0);
+    if (n >= 0) document.body.classList.add('was-open'); // so the close animation never plays on first load
+    tabs.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('on', n >= 0 && i === sections[n].tab));
+    closeMenu();
+    prevBtn.disabled = closeBtn.disabled = n < 0;
+    nextBtn.disabled = n === sections.length - 1;
+    if (n < 0) return;
+    await ready; // saved answers must be loaded before the pages are drawn
+    if (current !== n) return; // another click moved on while we waited
+    const s = sections[n];
+    binder.style.setProperty('--accent', s.color);
+    const [l, r] = pages(s);
+    if (prev >= 0) turn(n > prev, l, r);
+    else { [left.innerHTML, right.innerHTML] = [l, r]; fillMedia(); }
+    clip.style.display = s.id === 'intro' ? '' : 'none';
+    binder.classList.toggle('can-add', s.kind !== 'intro');
+  }
+
+  // ---------- media ----------
+  // With a participant link, files go to the private 'diary-media' bucket under <token>/ and their
+  // placement to the media table. Without one, they stay in this browser's IndexedDB.
+  let media = []; // { id, key, kind, name, path, blob, url, x, y, w }
+  const dbReady = new Promise(res => {
+    try {
+      const r = indexedDB.open('diary-study', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('media', { keyPath: 'id' });
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => res(null);
+    } catch { res(null); }
+  });
+  const store = async (mode, fn) => {
+    const db = await dbReady;
+    if (!db) return;
+    return new Promise(res => {
+      const req = fn(db.transaction('media', mode).objectStore('media'));
+      req.onsuccess = () => res(req.result);
+      req.onerror = () => res();
+    });
+  };
+  const objectURL = path => `${SUPA_URL}/storage/v1/object/diary-media/${path.split('/').map(encodeURIComponent).join('/')}`;
+
+  const mediaStore = {
+    async load() {
+      if (!online) return ((await store('readonly', s => s.getAll())) || []);
+      const rows = await rpc('load_my_media', {});
+      return Promise.all(rows.map(async r => {
+        const res = await fetch(objectURL(r.path), { headers: AUTH });
+        return { id: r.id, key: r.page_key, kind: r.kind, name: r.name, path: r.path, x: r.x, y: r.y, w: r.w,
+                 blob: res.ok ? await res.blob() : new Blob() };
+      }));
+    },
+    async add(m) {
+      if (!online) { const { url, ...rest } = m; return store('readwrite', s => s.put(rest)); }
+      m.path = `${TOKEN}/${m.id}-${m.name.replace(/[^\w.-]+/g, '_').slice(-120)}`;
+      const up = await fetch(objectURL(m.path), { method: 'POST', body: m.blob,
+        headers: { ...AUTH, 'Content-Type': m.blob.type || 'application/octet-stream' } });
+      if (!up.ok) throw new Error(`upload ${up.status}: ${await up.text()}`);
+      await rpc('add_media', { p_id: m.id, p_key: m.key, p_kind: m.kind, p_name: m.name, p_path: m.path,
+        p_mime: m.blob.type || null, p_size: m.blob.size, p_x: m.x, p_y: m.y, p_w: m.w });
+    },
+    move(m) {
+      if (!online) { const { url, ...rest } = m; return store('readwrite', s => s.put(rest)); }
+      return rpc('move_media', { p_id: m.id, p_x: m.x, p_y: m.y }).catch(e => console.warn('move not saved', e));
+    },
+    async remove(m) {
+      if (!online) return store('readwrite', s => s.delete(m.id));
+      await rpc('delete_media', { p_id: m.id });
+      await fetch(objectURL(m.path), { method: 'DELETE', headers: AUTH });
+    },
+  };
+
+  ready.then(() => mediaStore.load()).then(all => {
+    media = all.map(m => ({ ...m, url: URL.createObjectURL(m.blob) }));
+    document.querySelectorAll('.grid[data-media]').forEach(g => g.removeAttribute('data-filled'));
+    fillMedia();
+  }).catch(e => console.warn('could not load media', e));
+
+  function mediaHTML(m) {
+    const body = m.kind === 'image' ? `<img src="${m.url}" alt="${esc(m.name)}">`
+      : m.kind === 'video' ? `<video src="${m.url}" controls preload="metadata"></video>`
+      : `<a class="file-chip" href="${m.url}" target="_blank" rel="noopener"><img src="assets/icon-file.svg" alt="">${esc(m.name)}</a>`;
+    const w = m.kind === 'file' ? '' : `width:${m.w}px;`;
+    return `<div class="media ${m.kind}" data-id="${m.id}" style="left:${m.x}px;top:${m.y}px;${w}">${body}
+      <button class="rm" aria-label="Remove ${esc(m.name)}">×</button></div>`;
+  }
+
+  // Fill every rough page on screen (including a turning sheet) that hasn't been drawn yet
+  function fillMedia() {
+    document.querySelectorAll('.grid[data-media]:not([data-filled])').forEach(g => {
+      g.dataset.filled = '';
+      g.querySelector('.media-layer').innerHTML = media.filter(m => m.key === g.dataset.media).map(mediaHTML).join('');
+    });
+  }
+  const redraw = key => document.querySelectorAll(`.grid[data-media="${key}"]`).forEach(g => {
+    g.removeAttribute('data-filled');
+    fillMedia();
+  });
+
+  async function addFiles(files, kind) {
+    let s = sections[current];
+    if (s.kind === 'day') { go(current + 1); s = sections[current]; } // media lands on the day's rough pages
+    const key = `${s.id}-l`;
+    for (const f of files) {
+      const n = media.filter(m => m.key === key).length;
+      const m = { id: crypto.randomUUID?.() || String(Date.now() + Math.random()), key, kind, name: f.name,
+        blob: f, url: URL.createObjectURL(f), x: 15.5 + (n % 6) * 20, y: 15.5 + (n % 6) * 24, w: 321 };
+      media.push(m);
+      redraw(key);
+      mediaStore.add(m).catch(e => {
+        console.warn('upload failed', e);
+        media = media.filter(x => x !== m);
+        redraw(key);
+        alert(`“${f.name}” couldn't be uploaded. Check your connection and try again.`);
+      });
+    }
+  }
+
+  const fab = document.getElementById('fab');
+  const fabMenu = document.getElementById('fabMenu');
+  function closeMenu() { fabMenu.hidden = true; fab.setAttribute('aria-expanded', 'false'); }
+  fab.onclick = () => {
+    fabMenu.hidden = !fabMenu.hidden;
+    fab.setAttribute('aria-expanded', String(!fabMenu.hidden));
+  };
+  fabMenu.onclick = e => {
+    const b = e.target.closest('[data-pick]');
+    if (b) document.getElementById('pick-' + b.dataset.pick).click();
+  };
+  ['image', 'file', 'video'].forEach(kind => {
+    const input = document.getElementById('pick-' + kind);
+    input.onchange = () => { addFiles([...input.files], kind); input.value = ''; closeMenu(); };
+  });
+
+  // Drag a media item around its page, or remove it
+  binder.addEventListener('click', e => {
+    const rm = e.target.closest('.rm');
+    if (!rm) return;
+    const el = rm.closest('.media');
+    const m = media.find(m => m.id === el.dataset.id);
+    media = media.filter(x => x !== m);
+    mediaStore.remove(m).catch(e => console.warn('remove not saved', e));
+    URL.revokeObjectURL(m.url);
+    el.remove();
+  });
+  binder.addEventListener('pointerdown', e => {
+    const el = e.target.closest('.media');
+    if (!el || e.target.closest('.rm')) return;
+    const m = media.find(m => m.id === el.dataset.id);
+    const scale = el.getBoundingClientRect().width / el.offsetWidth;
+    const sx = e.clientX, sy = e.clientY, ox = m.x, oy = m.y;
+    let moved = false;
+    const move = ev => {
+      const dx = (ev.clientX - sx) / scale, dy = (ev.clientY - sy) / scale;
+      if (!moved && Math.hypot(dx, dy) < 4) return;
+      moved = true;
+      const g = el.parentElement;
+      m.x = Math.max(0, Math.min(g.clientWidth - el.offsetWidth, ox + dx));
+      m.y = Math.max(0, Math.min(g.clientHeight - el.offsetHeight, oy + dy));
+      el.style.left = m.x + 'px';
+      el.style.top = m.y + 'px';
+    };
+    const up = () => {
+      removeEventListener('pointermove', move);
+      removeEventListener('pointerup', up);
+      if (moved) mediaStore.move(m);
+    };
+    addEventListener('pointermove', move);
+    addEventListener('pointerup', up);
+  });
+  addEventListener('keydown', e => {
+    if (/TEXTAREA|INPUT/.test(document.activeElement.tagName)) return;
+    if (e.key === 'ArrowRight') go(current + 1);
+    if (e.key === 'ArrowLeft') go(current - 1);
+    if (e.key === 'Escape') go(-1);
+  });
+
+  // Scale the 1280×832 design frame to the window
+  const fit = () => {
+    const k = Math.min(innerWidth / 1280, innerHeight / 832);
+    document.getElementById('frame').style.transform = `translate(-50%, -50%) scale(${k})`;
+  };
+  addEventListener('resize', fit);
+  fit();
+</script>
+</body>
+</html>
