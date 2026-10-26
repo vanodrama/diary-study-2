@@ -81,6 +81,8 @@
   .belongs input { position: absolute; left: 24.5px; top: 72px; width: 122px; border: 0; border-bottom: 1px dashed #c9cac4;
     background: transparent; outline: none; font: 12px Inter, sans-serif; text-align: center; padding-bottom: 3px; }
   .ms-logo { position: absolute; left: 150px; top: 304px; width: 52px; height: 29px; object-fit: cover; }
+  /* some participants don't see the Microsoft logo; with a link it stays hidden until their setting loads */
+  body.no-ms .ms, body.no-ms .ms-logo, body.ms-pending .ms, body.ms-pending .ms-logo { visibility: hidden; }
 
   /* ---------- cover ---------- */
   #cover { position: absolute; left: 417px; top: 140px; width: 466px; height: 551px;
@@ -334,6 +336,14 @@
     if (!res.ok) throw new Error(`${fn} ${res.status}: ${await res.text()}`);
     const text = await res.text();
     return text ? JSON.parse(text) : null;
+  }
+
+  if (TOKEN) {
+    document.body.classList.add('ms-pending');
+    rpc('load_my_settings', {})
+      .then(rows => document.body.classList.toggle('no-ms', !!rows?.[0]?.hide_microsoft_logo))
+      .catch(e => console.warn('could not load settings', e))
+      .finally(() => document.body.classList.remove('ms-pending'));
   }
 
   const ready = (async () => {
