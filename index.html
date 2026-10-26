@@ -79,12 +79,35 @@
   #binder .slot { width: 432px; height: 527px; position: relative; }
 
   /* intro spread extras */
-  .card-hello { position: absolute; left: 8px; top: 16px; width: 389px; height: 243px; background: #eab9c2; }
-  .card-hello p { position: absolute; left: 22px; top: 22px; }
-  .card-hello img { position: absolute; left: 27px; top: 50px; width: 334px; height: 167px; object-fit: cover; }
-  .card-instr { position: absolute; left: 226px; top: 282px; width: 171px; height: 213px; background: #e8d17d; color: #4b4b4b; padding: 15px 14px; }
-  .card-instr p { font-size: 12px; letter-spacing: -.72px; margin-bottom: 12px; }
-  .card-instr ul { font-size: 10px; letter-spacing: -.6px; padding-left: 15px; width: 131px; }
+  .card-hello { position: absolute; left: 8px; top: 16px; width: 389px; height: 284px; background: #eab9c2; color: #4b4b4b; }
+  .card-hello h2 { position: absolute; left: 22px; top: 22px; font-weight: 700; font-size: 16px; letter-spacing: -.96px; color: var(--ink); }
+  .card-hello .lede { position: absolute; left: 22px; top: 46px; width: 265px; font-size: 10px; letter-spacing: -.6px; }
+  .polaroid { position: absolute; top: 102px; width: 139px; height: 150px; background: #fff; padding: 16px 8px 10px;
+    display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+  .polaroid b { font-weight: 700; font-size: 8px; letter-spacing: .08px; }
+  .polaroid .pic { position: relative; height: 80px; }
+  .polaroid .pic img { position: absolute; left: 50%; top: 50%; width: 135px; height: 97px; max-width: none; }
+  .polaroid p { font-size: 10px; letter-spacing: -.6px; width: 101px; }
+  .polaroid.one { left: 29px; transform: rotate(-8deg); } .polaroid.one .pic img { transform: translate(-50%,-50%) rotate(8deg); }
+  .polaroid.two { left: 226px; transform: rotate(8deg); } .polaroid.two .pic img { transform: translate(-50%,-50%) rotate(-8deg); }
+  .tape { position: absolute; width: 80px; height: 40px; object-fit: cover; }
+  .tape.one { left: 49px; top: 85px; transform: rotate(-8deg); } .tape.two { left: 266px; top: 89px; transform: rotate(8deg); }
+  .share { position: absolute; left: 179px; top: 140px; font-size: 10px; letter-spacing: -.6px; }
+  .share-arrows { position: absolute; left: 173px; top: 148px; width: 43px; height: 16.5px; }
+  .sticker { position: absolute; }
+  .sticker img { display: block; width: 100%; height: 100%; transition: transform .2s; }
+  .sticker:hover img, .sticker:focus img { transform: scale(1.08) rotate(-2deg); }
+  .sticker:focus-visible { outline: none; }
+  .sticker .tip { position: absolute; left: 50%; bottom: calc(100% + 6px); width: 190px; padding: 8px 10px; border-radius: 6px;
+    background: var(--ink); color: #fff; font-size: 10px; line-height: 1.4; letter-spacing: -.3px;
+    opacity: 0; pointer-events: none; transform: translate(-50%, 4px); transition: opacity .15s, transform .15s; z-index: 5; }
+  .sticker:hover .tip, .sticker:focus .tip { opacity: 1; transform: translate(-50%, 0); }
+  .st-real { left: 17.6px; top: 312px; width: 78.6px; height: 91px; }
+  .st-partner { left: 18px; top: 403px; width: 92px; height: 70px; }
+  .st-shareable { left: 103px; top: 332px; width: 90px; height: 49px; }
+  .st-show { left: 110px; top: 381px; width: 94.5px; height: 49px; }
+  .st-mess { left: 121px; top: 435px; width: 57px; height: 64px; }
+  .reminder { position: absolute; left: 232px; top: 288px; width: 180.6px; height: 239px; }
   .paperclip { position: absolute; left: 293px; top: -32px; width: 90px; height: 112px; object-fit: cover; pointer-events: none; }
   .belongs { position: absolute; left: calc(50% + 20px); top: calc(50% - 22.5px); transform: translate(-50%, -50%);
     width: 172px; height: 126px; border: 1px solid rgba(75,75,75,.2); }
@@ -463,15 +486,28 @@
   const esc = s => (s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const field = key => `data-key="${key}"`;
 
+  const STICKERS = [
+    ['st-real', 'sticker-real.png', 'Keep it real. Write naturally, but give us enough detail to understand what happened and why.'],
+    ['st-partner', 'sticker-partner.png', 'Talk to your partner! Ask questions, exchange ideas, and collaborate just as you normally would.'],
+    ['st-shareable', 'sticker-shareable.png', "Keep it shareable. Please don't include confidential company information or sensitive data."],
+    ['st-show', 'sticker-show.png', "Show, don't just tell. Feel free to add screenshots, prompts, links, or short recordings."],
+    ['st-mess', 'sticker-mess.png', "Make a mess! There's a rough work section where you can jot down ideas or brainstorm."],
+  ];
   const frame = (side, inner) =>
     `<div class="page ${side}"><div class="holes"></div><div class="margin"></div>${inner}</div>`;
 
   function pages(s) {
     if (s.id === 'intro') return [
-      `<div class="card-hello"><p class="q">Hello! Thank you for participating in this diary study</p>
-         <img src="assets/welcome-image.png" alt=""></div>
-       <div class="card-instr"><p>Instructions:</p><ul>
-         <li>Log into the diary by 5pm everyday</li><li>lorem ipsum</li><li>lorem ipum</li></ul></div>`,
+      `<div class="card-hello"><h2>Welcome to your AI Workflow Diary!</h2>
+         <p class="lede">Over the next 5 days, you'll explore an AI workflow, share it with a fellow designer, and try adapting theirs to your own work.</p>
+         <div class="polaroid one"><b>Day 1 &amp; 2</b><div class="pic"><img src="assets/photo-day12.png" alt=""></div>
+           <p>Work on a sharable / generalizable workflow</p></div>
+         <div class="polaroid two"><b>Day 4 &amp; 5</b><div class="pic"><img src="assets/photo-day45.png" alt=""></div>
+           <p>Adapt your partners workflow to your liking</p></div>
+         <img class="tape one" src="assets/tape.png" alt=""><img class="tape two" src="assets/tape.png" alt="">
+         <span class="share">Share</span><img class="share-arrows" src="assets/share-arrows.svg" alt=""></div>
+       ${STICKERS.map(([c, src, tip]) => `<div class="sticker ${c}" tabindex="0"><img src="assets/${src}" alt="${esc(tip)}"><span class="tip">${tip}</span></div>`).join('')}
+       <img class="reminder" src="assets/reminder-note.png" alt="Remember: We're not evaluating your AI skills. We're interested in how AI knowledge travels between designers - and what makes that journey easy, tricky, or surprising.">`,
       frame('r', `<div class="belongs"><p>This diary belongs to</p>
          <input ${field('name')} value="${esc(saved.name)}" aria-label="Your name"></div>
          <img class="ms-logo" src="assets/microsoft.png" alt="Microsoft">`),
