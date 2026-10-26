@@ -17,6 +17,7 @@
     --d2: #e8da5c;
     --d3: #4fae5c;
     --d4: #e0832e;
+    --d5: #9e8fd8;
     --rough: #d1233d;
     --accent: var(--intro);
   }
@@ -52,6 +53,11 @@
   .qs section { height: 157px; border-top: 1px solid var(--rule); padding: 8px 13px 0; display: flex; flex-direction: column; }
   .qs textarea { flex: 1; margin-top: 6px; border: 0; background: transparent; resize: none; outline: none;
     font: 13px/1.5 Inter, sans-serif; color: var(--ink); letter-spacing: -.3px; }
+  .qs .q { line-height: 1.3; }
+  .qs .qn { font-family: 'Fira Code', monospace; font-size: 10px; letter-spacing: .5px; color: #8a8b86; }
+  .day-intro { gap: 10px; padding-top: 12px !important; }
+  .day-intro h2 { font-weight: 400; font-size: 24px; letter-spacing: -1.4px; line-height: 1.1; color: #000; }
+  .day-intro p { font-size: 10px; letter-spacing: -.4px; line-height: 1.45; color: #4b4b4b; max-width: 370px; }
 
   /* rough work grid */
   .grid { position: absolute; top: 37px; width: 393px; height: 471px; border: 1px solid #cfd0cb;
@@ -330,25 +336,58 @@
     { label: '02', color: 'var(--d2)' },
     { label: '03', color: 'var(--d3)' },
     { label: '04', color: 'var(--d4)' },
+    { label: '05', color: 'var(--d5)' },
     { label: 'Rough', color: 'var(--rough)' },
   ];
   // Every spread in reading order; each day is a questions spread followed by its own rough spreads
   const ROUGH_SPREADS = 1;
   const sections = [
     { id: 'intro', kind: 'intro', tab: 0 },
-    ...[1, 2, 3, 4].flatMap(day => [
+    ...[1, 2, 3, 4, 5].flatMap(day => [
       { id: 'd' + day, kind: 'day', day, tab: day },
       ...Array.from({ length: ROUGH_SPREADS }, (_, i) =>
         ({ id: `d${day}r${i ? i + 1 : ''}`, kind: 'rough', day, tab: day })),
     ]),
     // the red Rough section at the back: 5 spreads (rough, rough2 … rough5)
-    ...Array.from({ length: 5 }, (_, i) => ({ id: `rough${i ? i + 1 : ''}`, kind: 'rough', tab: 5 })),
+    ...Array.from({ length: 5 }, (_, i) => ({ id: `rough${i ? i + 1 : ''}`, kind: 'rough', tab: 6 })),
   ];
   sections.forEach(s => s.color = tabList[s.tab].color);
-  const questions = [
-    ['What were you trying to accomplish?', 'What is the workflow?', 'What resources helped you create/refine it?'],
-    ['Which were most useful?', 'Why could it be useful to another designer?', 'Other thoughts'],
-  ];
+
+  // Each day: a title and task on the left page's first block, then five questions (keys d<day>-q<n>)
+  const SHARE_TASK = 'During your normal work, identify one AI workflow, prompt pattern, technique, or approach that another designer could potentially reuse or adapt. It should be specific enough to understand but broad enough to apply in another context.';
+  const ADAPT_TASK = 'Adapt your partner’s workflow to something relevant in your own work. It does not need to be a perfect fit. Contact the creator naturally if questions arise.';
+  const days = {
+    1: { title: 'Identify & Explore', task: SHARE_TASK, questions: [
+      'What AI workflow are you considering sharing? What does it help accomplish?',
+      'How did you discover or create this workflow?',
+      'Any resources, examples or people you took support from?',
+      'What did you explore, test, or refine today?',
+      'What do you plan to explore or finalize tomorrow?' ] },
+    2: { title: 'Finalize Workflow', task: SHARE_TASK, questions: [
+      'What progress have you made since yesterday? Did you test, refine, or change anything in your workflow?',
+      'What challenges did you face while using it?',
+      'What were your workarounds?',
+      'What resources, examples, or people helped you develop or improve the workflow?',
+      'Why do you think it could be useful to another designer?' ] },
+    3: { title: 'Share', task: 'Share the workflow with your partner in whatever way you would realistically share something with a teammate.', questions: [
+      'How did you share the workflow with your partner, and why did you choose that approach?',
+      'What information did you include?',
+      'What did you leave out or assume your partner would already understand?',
+      'Any challenges faced while documenting or explaining the workflow?',
+      'How confident are you that your partner can adapt it without additional help? (1–5) Why?' ] },
+    4: { title: 'Receive & Explore', task: ADAPT_TASK, questions: [
+      'What do you think this workflow your partner shared could help accomplish?',
+      'How might you use it in your own work? How relevant is it to your tasks? (1–5)',
+      'What have you tried or explored so far? What did you learn?',
+      'What information is unclear or missing?',
+      'How confident are you that you can adapt it? (1–5) Why?' ] },
+    5: { title: 'Adapt & Reflect', task: ADAPT_TASK, questions: [
+      'How did you adapt the workflow to your own task? What did you keep, change, or remove, and why?',
+      'What worked well?',
+      'What didn’t work as expected?',
+      'Did you reach out to your partner? What did you ask?',
+      'How usable was the workflow? (1–5) What would have made it easier to reuse?' ] },
+  };
 
   // Storage: Supabase. Each participant opens their own link, ?t=<token>, and the
   // database functions only accept that token. Without a token or a connection,
@@ -439,11 +478,17 @@
          <div class="media-layer"></div></div>`);
     });
     const day = String(s.day).padStart(2, '0');
-    return ['l', 'r'].map((side, p) => frame(side,
-      `<p class="mono label">[ Day ${day} ]</p><div class="qs">${questions[p].map((q, i) => {
-        const key = `${s.id}-${p}-${i}`;
-        return `<section><p class="q">${q}</p><textarea ${field(key)} aria-label="${q}">${esc(saved[key])}</textarea></section>`;
-      }).join('')}</div>`));
+    const d = days[s.day];
+    const question = (q, n) => {
+      const key = `d${s.day}-q${n}`;
+      return `<section><p class="q"><span class="qn">${n}.</span> ${q}</p>
+        <textarea ${field(key)} aria-label="${esc(q)}">${esc(saved[key])}</textarea></section>`;
+    };
+    const intro = `<section class="day-intro"><h2>${d.title}</h2><p>${d.task}</p></section>`;
+    return [
+      frame('l', `<p class="mono label">[ Day ${day} ]</p><div class="qs">${intro}${d.questions.slice(0, 2).map((q, i) => question(q, i + 1)).join('')}</div>`),
+      frame('r', `<p class="mono label">[ Day ${day} ]</p><div class="qs">${d.questions.slice(2).map((q, i) => question(q, i + 3)).join('')}</div>`),
+    ];
   }
 
   const left = document.getElementById('left');
