@@ -308,7 +308,7 @@
     <div class="title"><span>Diary</span>Study</div>
     <img class="gt" src="assets/georgia-tech.png" alt="Georgia Tech">
     <img class="ms" src="assets/microsoft.png" alt="Microsoft">
-    <p class="mono foot" style="left:40px">[ Nov XX - Nov XX ]</p>
+    <p class="mono foot" id="studyDates" style="left:40px">[ Nov XX - Nov XX ]</p>
     <p class="mono foot" style="left:405px">[ 2026 ]</p>
     <i class="shade"></i>
    </div>
@@ -444,7 +444,10 @@
   if (TOKEN) {
     document.body.classList.add('ms-pending');
     rpc('load_my_settings', {})
-      .then(rows => document.body.classList.toggle('no-ms', !!rows?.[0]?.hide_microsoft_logo))
+      .then(rows => {
+        document.body.classList.toggle('no-ms', !!rows?.[0]?.hide_microsoft_logo);
+        if (rows?.[0]?.study_dates) document.getElementById('studyDates').textContent = `[ ${rows[0].study_dates} ]`;
+      })
       .catch(e => console.warn('could not load settings', e))
       .finally(() => document.body.classList.remove('ms-pending'));
   }
