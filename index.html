@@ -341,7 +341,8 @@
       ...Array.from({ length: ROUGH_SPREADS }, (_, i) =>
         ({ id: `d${day}r${i ? i + 1 : ''}`, kind: 'rough', day, tab: day })),
     ]),
-    { id: 'rough', kind: 'rough', tab: 5 },
+    // the red Rough section at the back: 5 spreads (rough, rough2 … rough5)
+    ...Array.from({ length: 5 }, (_, i) => ({ id: `rough${i ? i + 1 : ''}`, kind: 'rough', tab: 5 })),
   ];
   sections.forEach(s => s.color = tabList[s.tab].color);
   const questions = [
