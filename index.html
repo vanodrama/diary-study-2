@@ -116,6 +116,8 @@
     background: transparent; outline: none; font: 12px Inter, sans-serif; text-align: center; padding-bottom: 3px; }
   .ms-logo { position: absolute; left: 150px; top: 304px; width: 52px; height: 29px; object-fit: cover; }
   /* some participants don't see the Microsoft logo; with a link it stays hidden until their setting loads */
+  /* participants with another partner company see its logo in place of Microsoft's */
+  body.logo-google #cover .ms, body.logo-google .ms-logo { content: url(assets/google.png); object-fit: contain; }
   body.no-ms .ms, body.no-ms .ms-logo, body.ms-pending .ms, body.ms-pending .ms-logo { visibility: hidden; }
 
   /* ---------- cover ---------- */
@@ -446,6 +448,7 @@
     rpc('load_my_settings', {})
       .then(rows => {
         document.body.classList.toggle('no-ms', !!rows?.[0]?.hide_microsoft_logo);
+        if (rows?.[0]?.partner_logo) document.body.classList.add(`logo-${rows[0].partner_logo}`);
         if (rows?.[0]?.study_dates) document.getElementById('studyDates').textContent = `[ ${rows[0].study_dates} ]`;
       })
       .catch(e => console.warn('could not load settings', e))
