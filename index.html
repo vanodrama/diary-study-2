@@ -174,6 +174,7 @@
   .media-layer { position: absolute; inset: 0; pointer-events: none; }
   .media { position: absolute; pointer-events: auto; cursor: grab; touch-action: none; }
   .media:active { cursor: grabbing; }
+  .media.image { cursor: pointer; }
   .media img, .media video { display: block; width: 100%; height: auto; max-height: 300px; object-fit: cover; user-select: none; -webkit-user-drag: none; }
   .media.image, .media.video { box-shadow: 1px 2px 6px rgba(0,0,0,.15); }
   .file-chip { display: flex; align-items: center; gap: 6px; padding: 7px 10px; background: var(--paper); border: 1px solid #cfd0cb;
@@ -638,6 +639,7 @@
       removeEventListener('pointermove', move);
       removeEventListener('pointerup', up);
       if (moved) mediaStore.move(m);
+      else if (m.kind === 'image') window.open(m.url, '_blank'); // a click without a drag opens the full image
     };
     addEventListener('pointermove', move);
     addEventListener('pointerup', up);
