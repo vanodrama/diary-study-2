@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Diary Study</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #1b1b1b;
@@ -53,11 +53,16 @@
   .qs section { height: 157px; border-top: 1px solid var(--rule); padding: 8px 13px 0; display: flex; flex-direction: column; }
   .qs textarea { flex: 1; margin-top: 6px; border: 0; background: transparent; resize: none; outline: none;
     font: 13px/1.5 Inter, sans-serif; color: var(--ink); letter-spacing: -.3px; }
-  .qs .q { line-height: 1.3; }
-  .qs .qn { font-family: 'Fira Code', monospace; font-size: 10px; letter-spacing: .5px; color: #8a8b86; }
-  .day-intro { gap: 10px; padding-top: 12px !important; }
-  .day-intro h2 { font-weight: 400; font-size: 24px; letter-spacing: -1.4px; line-height: 1.1; color: #000; }
-  .day-intro p { font-size: 10px; letter-spacing: -.4px; line-height: 1.45; color: #4b4b4b; max-width: 370px; }
+  /* day question pages (Figma 4:92): title + task top-left, then ruled question blocks */
+  .day-title { position: absolute; left: 12px; top: 24px; font-weight: 700; font-size: 16px; letter-spacing: -.96px; color: var(--ink); }
+  .day-task { position: absolute; left: 12px; top: 45px; width: 311px; font-size: 12px; letter-spacing: -.72px; color: var(--ink); }
+  .qs.day { top: 34px; }
+  .page.l .qs.day { top: 126px; }
+  .qs.day section { height: 160px; padding: 8px 9px 0; }
+  .page.l .qs.day section:first-child { height: 208px; }
+  .page.l .qs.day section:last-child { height: 193px; }
+  .qs.day .q { font-size: 10px; letter-spacing: -.6px; color: var(--ink); }
+  .qs.day textarea { font-size: 10px; line-height: 1.45; letter-spacing: -.6px; }
 
   /* rough work grid */
   .grid { position: absolute; top: 37px; width: 393px; height: 471px; border: 1px solid #cfd0cb;
@@ -481,13 +486,14 @@
     const d = days[s.day];
     const question = (q, n) => {
       const key = `d${s.day}-q${n}`;
-      return `<section><p class="q"><span class="qn">${n}.</span> ${q}</p>
+      return `<section><p class="q">${n}. ${q}</p>
         <textarea ${field(key)} aria-label="${esc(q)}">${esc(saved[key])}</textarea></section>`;
     };
-    const intro = `<section class="day-intro"><h2>${d.title}</h2><p>${d.task}</p></section>`;
     return [
-      frame('l', `<p class="mono label">[ Day ${day} ]</p><div class="qs">${intro}${d.questions.slice(0, 2).map((q, i) => question(q, i + 1)).join('')}</div>`),
-      frame('r', `<p class="mono label">[ Day ${day} ]</p><div class="qs">${d.questions.slice(2).map((q, i) => question(q, i + 3)).join('')}</div>`),
+      frame('l', `<h2 class="day-title">${d.title}</h2><p class="day-task">${d.task}</p>
+        <div class="qs day">${d.questions.slice(0, 2).map((q, i) => question(q, i + 1)).join('')}</div>`),
+      frame('r', `<p class="mono label">[ Day ${day} ]</p>
+        <div class="qs day">${d.questions.slice(2).map((q, i) => question(q, i + 3)).join('')}</div>`),
     ];
   }
 
