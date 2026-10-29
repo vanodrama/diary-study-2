@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Diary Study</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;500;600;700&family=Caveat&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #1b1b1b;
@@ -74,7 +74,7 @@
   .page.r .grid { left: 24px; }
   .grid textarea { width: 100%; height: 100%; border: 0; background: transparent; resize: none; outline: none; padding: 16.5px 15.5px;
     font: 13px/1.5 Inter, sans-serif; color: var(--ink); }
-  .grid textarea::placeholder { color: #8a8a8a; font: 15px/1.2 'Caveat', cursive; letter-spacing: -.2px; }
+  .grid textarea::placeholder { color: #8a8a8a; font-size: 12px; letter-spacing: -.72px; }
   .grid .hint { position: absolute; left: 15.5px; top: 447.5px; width: 368px; pointer-events: none;
     font-size: 12px; letter-spacing: -.72px; color: #8a8a8a; }
 
@@ -354,6 +354,15 @@
   .gate-card .code input:focus { border-color: var(--ink); }
   .gate-card.wrong .code input { border-color: var(--rough); animation: shake .3s; }
   @keyframes shake { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+  /* Figma 42:1508: the short card for every later session */
+  .gate-card.login { height: 288px; }
+  .gate-card.login .hi, .gate-card.login .faces, .gate-card.login .thanks p:first-child { display: none; }
+  .gate-card.login .thanks { left: 50%; top: 48px; }
+  .gate-card:not(.login) .ask-again, .gate-card.login .ask-first { display: none; }
+  .gate-card.login .code, .gate-card.login .go { left: 50%; }
+  .gate-card.login .code { top: 91px; }
+  .gate-card.login .go { top: 184px; }
+  .gate-card.login .err { top: 161px; }
   .gate-card .err { position: absolute; left: 0; right: 0; top: 361px; text-align: center; font-size: 11px; letter-spacing: -.3px; color: var(--rough); }
   .gate-card .go { position: absolute; left: calc(50% + 11px); top: 384px; transform: translateX(-50%); width: 107px; height: 42px; border: 0; border-radius: 4px;
     background: #000; color: #fff; font: 14px/24px Inter, sans-serif; cursor: pointer; transition: opacity .15s; }
@@ -500,7 +509,7 @@
       </ul>
       <a class="contact-send" href="mailto:vkumar438@gatech.edu,msabherwal3@gatech.edu?subject=Diary%20study%20question">Send email</a>
     </div>
-    <button class="contact-btn" id="helpBtn" aria-label="How to use the diary" title="How to use the diary"><img src="assets/icon-question.svg" alt="" width="24" height="24"></button>
+    <button class="contact-btn" id="helpBtn" aria-label="See today’s task" title="See today’s task"><img src="assets/icon-question.svg" alt="" width="24" height="24"></button>
     <button class="contact-btn" id="contactBtn" aria-label="Contact the researchers" aria-expanded="false">
       <img src="assets/icon-envelope.svg" alt="" width="24" height="24">
     </button>
@@ -513,7 +522,7 @@
     <img class="red" src="assets/margin-line.svg" alt="" width="498" height="1">
     <p class="hand hi" id="gateHi">Hi 👋  We are Medhavi and Vanshika</p>
     <div class="faces"><img src="assets/researcher-1.png" alt="Medhavi" width="92" height="92"><img src="assets/researcher-2.png" alt="Vanshika" width="92" height="92"></div>
-    <div class="hand thanks"><p>Thank you for participating in our study.</p><p>Please enter your access code to get started.</p></div>
+    <div class="hand thanks"><p>Thank you for participating in our study.</p><p class="ask-first">Please enter your access code to get started.</p><p class="ask-again">Please enter your access code to login</p></div>
     <div class="code" role="group" aria-label="Access code">
       <input maxlength="1" placeholder="X" aria-label="Letter 1" autocapitalize="characters" spellcheck="false">
       <input maxlength="1" placeholder="X" aria-label="Letter 2" autocapitalize="characters" spellcheck="false">
@@ -621,11 +630,13 @@
   // answers are kept in this browser's localStorage instead.
   const SUPA_URL = 'https://hekiwayvwkjgqrgfeull.supabase.co';
   const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhla2l3YXl2d2tqZ3FyZ2ZldWxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyMjExNTQsImV4cCI6MjEwODc5NzE1NH0.6IoaLRcHQYXXxsX7IeDrGceFmNICTnhxCoDtdm2Fi_I';
-  // A participant gets in with their link (?t=<token>) or, the first time, by typing their access code,
-  // which is swapped for the token and remembered in this browser
-  let storedToken = null;
-  try { storedToken = localStorage.getItem('diary-token'); } catch {}
-  const TOKEN = new URLSearchParams(location.search).get('t') || storedToken;
+  // Every browser session starts with the access code: the first time on this browser with the welcome
+  // card (then the tour), after that with the short login card. The code is swapped for the participant's
+  // token, and nothing is loaded until it has been entered in this session.
+  const store1 = (area, key, value) => { try { return value === undefined ? area.getItem(key) : area.setItem(key, value); } catch { return null; } };
+  const UNLOCKED = !!store1(sessionStorage, 'diary-unlocked');
+  const WELCOMED = !!store1(localStorage, 'diary-welcomed');
+  const TOKEN = UNLOCKED ? new URLSearchParams(location.search).get('t') || store1(localStorage, 'diary-token') : null;
   const AUTH = { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` };
 
   let saved = {};
@@ -1307,7 +1318,12 @@
   // ---------- access code ----------
   const gate = document.getElementById('gate'), gateForm = document.getElementById('gateForm');
   const boxes = [...gateForm.querySelectorAll('.code input')];
-  if (!TOKEN) { gate.hidden = false; boxes[0].focus(); }
+  if (!UNLOCKED || !TOKEN) {
+    gateForm.classList.toggle('login', WELCOMED);
+    gateForm.querySelector('.go').textContent = WELCOMED ? 'Login' : 'Get Started';
+    gate.hidden = false;
+    boxes[0].focus();
+  }
   const setErr = msg => { document.getElementById('gateErr').textContent = msg; gateForm.classList.toggle('wrong', !!msg); };
   gateForm.addEventListener('input', e => {
     const i = boxes.indexOf(e.target);
@@ -1334,9 +1350,11 @@
         headers: { ...AUTH, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_code: code }) });
       const token = res.ok ? await res.json() : null;
       if (!token) { setErr('That code doesn’t match. Check it and try again.'); boxes.forEach(b => b.value = ''); boxes[0].focus(); return; }
-      try { localStorage.setItem('diary-token', token); } catch {}
-      // the token in the URL also keeps them in if storage is blocked; welcome=1 plays the tour once
-      location.replace(location.pathname + '?t=' + encodeURIComponent(token) + '&welcome=1');
+      store1(localStorage, 'diary-token', token);
+      store1(sessionStorage, 'diary-unlocked', '1');
+      store1(localStorage, 'diary-welcomed', '1');
+      // welcome=1 plays the tour, only after the first-time card
+      location.replace(location.pathname + '?t=' + encodeURIComponent(token) + (WELCOMED ? '' : '&welcome=1'));
     } catch {
       setErr('Couldn’t connect. Check your internet and try again.');
     } finally { btn.disabled = false; }
@@ -1383,7 +1401,7 @@
     { sec: 'day', sel: '.page-count', title: 'Pages within a day', text: 'Each day has a question spread followed by rough pages. This shows which page of the day you’re on.' },
     { sec: 'dayr', sel: '#binder', title: 'Rough pages are a canvas', text: 'Jot notes, then drag screenshots, videos, files and notes anywhere, even onto the facing page. Pull an item’s corner to resize it, and ✎ to draw on an image or video.' },
     { sec: 'dayr', sel: '#fab', title: 'Add things', text: 'Use + to add an image, file, video, sticky note, or a whole new rough page.', open: true },
-    { sel: '#helpBtn', title: 'You’re all set', text: 'Replay this tour any time with ?, or email your researchers with the envelope button.' },
+    { sel: '#helpBtn', title: 'You’re all set', text: 'Tap ? any time to see the day’s task, or email your researchers with the envelope button.' },
   ];
   const tour = document.getElementById('tour'), tourSpot = document.getElementById('tourSpot'), tourCard = document.getElementById('tourCard');
   let tourAt = -1;
@@ -1437,7 +1455,11 @@
     if (t === 'next') tourAt === tourSteps.length - 1 ? endTour() : showTour(tourAt + 1);
   };
   addEventListener('resize', () => { if (!tour.hidden) showTour(tourAt); });
-  document.getElementById('helpBtn').onclick = () => { setContact(false); startTour(); };
+  // ? shows the task for the day on screen, or the latest day that has opened
+  document.getElementById('helpBtn').onclick = () => {
+    setContact(false);
+    showTask(sections[current]?.day || Math.max(1, openDay ?? 1));
+  };
   // Right after Get Started the diary opens and the tour plays, once; the flag is dropped from the URL
   // so a reload or bookmark doesn't play it again
   const params = new URLSearchParams(location.search);
