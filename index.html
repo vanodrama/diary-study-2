@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Diary Study</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;700&family=Caveat&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #1b1b1b;
@@ -44,7 +44,7 @@
   .page.r .margin { left: 24px; }
   .page .label { position: absolute; top: 12px; }
   .page.l .label { left: 12px; }
-  .page.r .label { right: 15px; }
+  .page.r .label { right: 15px; top: 11px; }
 
   /* question sections on day pages */
   .qs { position: absolute; top: 37px; width: 403px; display: flex; flex-direction: column; }
@@ -54,7 +54,9 @@
   .qs textarea { flex: 1; margin-top: 6px; border: 0; background: transparent; resize: none; outline: none;
     font: 13px/1.5 Inter, sans-serif; color: var(--ink); letter-spacing: -.3px; }
   /* day question pages (Figma 4:92): title + task top-left, then ruled question blocks */
-  .day-title { position: absolute; left: 12px; top: 16px; font-weight: 700; font-size: 16px; letter-spacing: -.96px; color: var(--ink); }
+  .day-title { position: absolute; left: 12px; top: 16px; font-weight: 700; font-size: 16px; letter-spacing: -.96px; color: var(--ink);
+    border: 0; background: none; padding: 0; font-family: Inter, sans-serif; cursor: pointer; }
+  .day-title:hover { text-decoration: underline dotted; text-underline-offset: 3px; }
   .day-task { position: absolute; left: 12px; top: 45px; width: 311px; font-size: 12px; letter-spacing: -.72px; color: var(--ink); }
   .qs.day { top: 34px; }
   .page.l .qs.day { top: 126px; }
@@ -70,12 +72,11 @@
     background-size: 13.1px 13.1px; }
   .page.l .grid { left: 12px; }
   .page.r .grid { left: 24px; }
-  .grid textarea { width: 100%; height: 100%; border: 0; background: transparent; resize: none; outline: none; padding: 10px;
+  .grid textarea { width: 100%; height: 100%; border: 0; background: transparent; resize: none; outline: none; padding: 16.5px 15.5px;
     font: 13px/1.5 Inter, sans-serif; color: var(--ink); }
-  .grid textarea::placeholder { color: #9a9b95; }
-  /* a short nudge on what rough pages are for; stays visible once the page fills up */
-  .grid .hint { position: absolute; left: 10px; right: 10px; bottom: 6px; pointer-events: none;
-    font-size: 9px; letter-spacing: -.3px; color: #8d8e88; font-style: italic; }
+  .grid textarea::placeholder { color: #8a8a8a; font: 15px/1.2 'Caveat', cursive; letter-spacing: -.2px; }
+  .grid .hint { position: absolute; left: 15.5px; top: 447.5px; width: 368px; pointer-events: none;
+    font-size: 12px; letter-spacing: -.72px; color: #8a8a8a; }
 
 
   /* Figma 40:1393: DD/MM/YYYY date over a dotted rule, top-right of each spread's right page */
@@ -353,6 +354,21 @@
     background: #000; color: #fff; font: 14px/24px Inter, sans-serif; cursor: pointer; transition: opacity .15s; }
   .gate-card .go:disabled { opacity: .5; cursor: default; }
 
+  /* ---------- today's task (Figma 40:1179): a note over the blurred diary when a day opens ---------- */
+  .task { position: absolute; left: -2000px; top: -2000px; width: 5280px; height: 4832px; z-index: 18;
+    background: rgba(0,0,0,.3); backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); cursor: pointer; }
+  .task-card { position: absolute; left: 2771px; top: 2249px; width: 423px; height: 481px; background: var(--paper); overflow: hidden; cursor: default;
+    animation: menuIn .25s ease-out; }
+  .task-card .lines { position: absolute; left: 0; top: 24px; }
+  .task-card .red { position: absolute; left: 41px; top: -9px; transform-origin: 0 0; transform: rotate(90deg); }
+  .task-card .hand { font-family: 'Caveat', cursive; color: #4b4b4b; }
+  .task-card .kicker { position: absolute; left: 0; right: 0; top: 50px; text-align: center; font-size: 17px; line-height: 20px; }
+  .task-card .body { position: absolute; left: 70px; top: 96px; width: 305px; display: flex; flex-direction: column; gap: 19px; text-align: center; line-height: 24px; }
+  .task-card h3 { font-weight: 700; font-size: 22px; letter-spacing: -.3px; }
+  .task-card .body p { font-size: 17px; letter-spacing: -.2px; }
+  .task-card .tip { position: absolute; left: 78px; top: 408px; width: 305px; text-align: center; font-size: 14px; line-height: 24px; letter-spacing: -.84px; color: #4b4b4b; }
+  .task-card .shut { position: absolute; right: 8px; top: 4px; border: 0; background: none; font-size: 18px; color: #4b4b4b; cursor: pointer; padding: 2px 6px; }
+
   /* ---------- onboarding tour ---------- */
   .tour { position: fixed; inset: 0; z-index: 30; }
   .tour-spot { position: fixed; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,.6); transition: all .3s ease; pointer-events: none; }
@@ -447,6 +463,17 @@
     <button id="next" aria-label="Next page"><img src="assets/icon-caret-next.svg" alt="" width="24" height="24"></button>
   </div>
 
+
+  <div class="task" id="task" hidden>
+    <div class="task-card" role="dialog" aria-labelledby="taskTitle">
+      <img class="lines" src="assets/lined-paper.svg" alt="" width="481" height="457">
+      <img class="red" src="assets/margin-line.svg" alt="" width="498" height="1">
+      <button class="shut" id="taskClose" aria-label="Close today’s task">×</button>
+      <p class="hand kicker">Today’s Task</p>
+      <div class="hand body"><h3 id="taskTitle"></h3><p id="taskText"></p></div>
+      <p class="tip" id="taskTip"></p>
+    </div>
+  </div>
 
   <!-- Contact the researchers -->
   <div class="contact">
@@ -627,7 +654,7 @@
       for (let day = 1; day <= 5; day++) {
         const questions = [1, 2, 3, 4, 5].map(n => text[`d${day}-q${n}`]);
         if (questions.every(Boolean)) days[day] = { title: text[`d${day}-i1`] || days[day].title,
-          task: text[`d${day}-i2`] || days[day].task, questions };
+          task: text[`d${day}-i2`] || days[day].task, tip: text[`d${day}-i3`] || '', questions };
       }
     })
     .catch(e => console.warn('could not load questions, using built-in copy', e));
@@ -696,11 +723,10 @@
     const iso = `${yyyy}-${mm}-${dd}`, t = new Date(iso + 'T00:00:00Z');
     return !isNaN(t) && t.getUTCDate() === +dd ? iso : null;
   }
+  // Figma 40:592: a handwritten prompt on the left page, a hint along the bottom of the right
   const ROUGH_PROMPTS = {
-    l: ['Think out loud here: half-formed ideas, prompts you tried, what worked, what didn’t, and anything that surprised you…',
-        'Messy is welcome. Notes, sketches, failed attempts, questions for your partner.'],
-    r: ['Drop in screenshots, recordings, files or notes with the + button. Drag them anywhere, even across pages…',
-        'Tip: drag the corner to resize, ✎ to draw on an image or video.'],
+    l: ['Think out loud here! Half formed ideas, prompts you tried, what worked, what didn’t work', ''],
+    r: ['', 'Drop in screen recordings, sketches, files and more...'],
   };
   const frame = (side, inner) =>
     `<div class="page ${side}"><div class="holes"></div><div class="margin"></div>${inner}</div>`;
@@ -728,9 +754,9 @@
     if (s.kind === 'rough') return ['l', 'r'].map(side => {
       const key = `${s.id}-${side}`;
       const [prompt, hint] = ROUGH_PROMPTS[side];
-      return frame(side, `${side === 'l' ? '<p class="mono label">[ Rough Work ]</p>' : date}
+      return frame(side, `<p class="mono label">[ Rough Work ]</p>
        <div class="grid" data-media="${key}"><textarea ${field(key)} aria-label="Rough work" placeholder="${esc(prompt)}">${esc(saved[key])}</textarea>
-         <p class="hint">${hint}</p><div class="media-layer"></div></div>`);
+         ${hint ? `<p class="hint">${hint}</p>` : ''}<div class="media-layer"></div></div>`);
     });
     const d = days[s.day];
     const mood = +saved[`d${s.day}-mood`] || 0;
@@ -744,7 +770,7 @@
         <textarea ${field(key)} aria-label="${esc(q)}">${esc(saved[key])}</textarea></section>`;
     };
     return [
-      frame('l', `<h2 class="day-title" title="${esc(`${d.title}: ${d.task}`)}">Day ${DAY_WORDS[s.day]}</h2>
+      frame('l', `<button class="day-title" data-task="${s.day}" title="See today’s task">Day ${DAY_WORDS[s.day]}</button>
         <textarea class="day-summary" ${field(summaryKey)} placeholder="Today my day was ..." aria-label="How was your day?">${esc(saved[summaryKey])}</textarea>${moods}
         <div class="qs day">${d.questions.slice(0, 2).map((q, i) => question(q, i + 1)).join('')}</div>`),
       frame('r', `${date}
@@ -906,6 +932,7 @@
     clip.style.display = s.id === 'intro' ? '' : 'none';
     binder.classList.toggle('can-add', s.kind !== 'intro');
     drawPager();
+    if (s.kind === 'day' && tour.hidden && !taskSeen(s.day)) setTimeout(() => { if (sections[current] === s) showTask(s.day); }, prev >= 0 ? 950 : 0);
   }
 
   // "Page n of m" counts the spreads inside the current tab, e.g. a day's questions and its rough pages
@@ -1307,11 +1334,31 @@
       const token = res.ok ? await res.json() : null;
       if (!token) { setErr('That code doesn’t match. Check it and try again.'); boxes.forEach(b => b.value = ''); boxes[0].focus(); return; }
       try { localStorage.setItem('diary-token', token); } catch {}
-      location.replace(location.pathname + '?t=' + encodeURIComponent(token)); // also keeps them in if storage is blocked
+      // the token in the URL also keeps them in if storage is blocked; welcome=1 plays the tour once
+      location.replace(location.pathname + '?t=' + encodeURIComponent(token) + '&welcome=1');
     } catch {
       setErr('Couldn’t connect. Check your internet and try again.');
     } finally { btn.disabled = false; }
   });
+
+  // ---------- today's task ----------
+  // The first time a participant opens each day, its instruction appears as a note over the diary.
+  // Clicking the day's title brings it back.
+  const task = document.getElementById('task');
+  const seenKey = day => `diary-task-seen-${TOKEN || 'anon'}-d${day}`;
+  const taskSeen = day => { try { return !!localStorage.getItem(seenKey(day)); } catch { return false; } };
+  function showTask(day) {
+    const d = days[day];
+    document.getElementById('taskTitle').textContent = d.title;
+    document.getElementById('taskText').textContent = d.task;
+    document.getElementById('taskTip').textContent = d.tip ? `Tip: ${d.tip}` : '';
+    task.hidden = false;
+    try { localStorage.setItem(seenKey(day), '1'); } catch {}
+    document.getElementById('taskClose').focus();
+  }
+  const hideTask = () => { task.hidden = true; };
+  task.addEventListener('click', e => { if (e.target === task || e.target.id === 'taskClose') hideTask(); });
+  binder.addEventListener('click', e => { const t = e.target.closest('[data-task]'); if (t) showTask(+t.dataset.task); });
 
   // ---------- onboarding tour ----------
   // Plays the first time someone opens the diary, and again from the ? button. Steps that point at
@@ -1380,14 +1427,18 @@
   };
   addEventListener('resize', () => { if (!tour.hidden) showTour(tourAt); });
   document.getElementById('helpBtn').onclick = () => { setContact(false); startTour(); };
-  document.getElementById('cover').addEventListener('click', () => {
-    let done = false;
-    try { done = !!localStorage.getItem('diary-tour-done'); } catch {}
-    if (!done) setTimeout(() => { if (tour.hidden) startTour(); }, 1600);
-  });
+  // Right after Get Started the diary opens and the tour plays, once; the flag is dropped from the URL
+  // so a reload or bookmark doesn't play it again
+  const params = new URLSearchParams(location.search);
+  if (params.has('welcome')) {
+    params.delete('welcome');
+    history.replaceState(null, '', location.pathname + (params.size ? '?' + params : ''));
+    ready.then(() => { go(0); setTimeout(startTour, 1600); });
+  }
 
   addEventListener('keydown', e => {
     if (!gate.hidden) return;
+    if (!task.hidden) { if (e.key === 'Escape') hideTask(); return; }
     if (!tour.hidden) {
       if (e.key === 'Escape') endTour();
       if (e.key === 'ArrowRight') tourAt === tourSteps.length - 1 ? endTour() : showTour(tourAt + 1);
