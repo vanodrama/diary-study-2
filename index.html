@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Diary Study</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;600;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #1b1b1b;
@@ -103,8 +103,10 @@
   #binder .slot { width: 432px; height: 527px; position: relative; }
 
   /* intro spread extras */
+  /* Figma 40:992: spine holes on the intro's left half, punched through to the dark binder */
+  .intro-holes { left: 413px; --hole: #1b1b1b; }
   .card-hello { position: absolute; left: 8px; top: 16px; width: 389px; height: 284px; background: #eab9c2; color: #4b4b4b; }
-  .card-hello h2 { position: absolute; left: 22px; top: 22px; font-weight: 700; font-size: 16px; letter-spacing: -.96px; color: var(--ink); }
+  .card-hello h2 { position: absolute; left: 22px; top: 22px; font-weight: 600; font-size: 16px; letter-spacing: -.96px; color: var(--ink); }
   .card-hello .lede { position: absolute; left: 22px; top: 46px; width: 265px; font-size: 10px; letter-spacing: -.6px; }
   .polaroid { position: absolute; top: 102px; width: 139px; height: 150px; background: #fff; padding: 16px 8px 10px;
     display: flex; flex-direction: column; gap: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
@@ -733,7 +735,7 @@
 
   function pages(s) {
     if (s.id === 'intro') return [
-      `<div class="card-hello"><h2>Welcome to your AI Workflow Diary!</h2>
+      `<div class="holes intro-holes"></div><div class="card-hello"><h2>Welcome to your AI Workflow Diary!</h2>
          <p class="lede">Over the next 5 days, you'll explore an AI workflow, share it with a fellow designer, and try adapting theirs to your own work.</p>
          <div class="polaroid one"><b>Day 1 &amp; 2</b><div class="pic"><img src="assets/photo-day12.png" alt=""></div>
            <p>Work on a sharable / generalizable workflow</p></div>
@@ -940,7 +942,7 @@
   function drawPager() {
     const s = sections[current];
     const group = s ? sections.filter(x => x.tab === s.tab) : [];
-    pageCount.textContent = s ? `Page ${group.indexOf(s) + 1} of ${group.length}` : '';
+    pageCount.textContent = !s ? '' : s.kind === 'intro' ? 'Instructions' : `Page ${group.indexOf(s) + 1} of ${group.length}`;
   }
   const diaryName = document.getElementById('diaryName');
   const drawName = () => { const n = (saved.name || '').trim(); diaryName.textContent = n ? `${n}’s Diary` : 'Your Diary'; };
