@@ -335,25 +335,37 @@
   .diary-head button:hover { transform: scale(1.1); }
   body.closed .diary-head, body.closed .controls { opacity: 0; pointer-events: none; }
 
-  /* ---------- annotation editor ---------- */
+  /* ---------- annotation editor (Figma 45:2007) ---------- */
   .annot { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.7); display: grid; place-items: center; }
-  .annot-card { background: var(--paper); padding: 14px; box-shadow: 0 10px 40px rgba(0,0,0,.5); display: flex; flex-direction: column; gap: 10px; }
-  .annot-stage { position: relative; line-height: 0; align-self: center; }
-  .annot-stage img, .annot-stage video { display: block; max-width: 80vw; max-height: 68vh; }
+  .annot-card { position: relative; width: 450px; height: 550px; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+  .annot-title { position: absolute; left: 18px; top: 22px; font-size: 16px; line-height: 24px; letter-spacing: -.96px; color: #4b4b4b; }
+  .annot-area { position: absolute; left: 16px; top: 59px; width: 418px; height: 382px; background: #fbf9ef; border: 1px solid #afafaf;
+    display: grid; place-items: center; overflow: hidden; }
+  .annot-stage { position: relative; line-height: 0; overflow: hidden; }
+  .annot-stage img, .annot-stage video { display: block; max-width: 416px; max-height: 380px; }
   .annot-stage canvas { position: absolute; left: 0; top: 0; cursor: crosshair; touch-action: none; }
   .annot-stage.text canvas { cursor: text; }
   .annot-text { position: absolute; z-index: 2; min-width: 120px; border: 1px dashed currentColor; background: rgba(255,255,255,.6);
-    outline: none; padding: 0 2px; font: 16px/1.2 Inter, sans-serif; line-height: 1.2; }
+    outline: none; padding: 0 2px; font: 16px/1.2 Inter, sans-serif; }
   .crop-box { position: absolute; pointer-events: none; border: 1.5px dashed #fff; box-shadow: 0 0 0 9999px rgba(0,0,0,.45); }
-  .annot-stage { overflow: hidden; }
-  .annot-card { max-width: 92vw; }
-  .annot-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 12px Inter, sans-serif; }
-  .annot-bar .sw { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; background: var(--c); }
-  .annot-bar .sw.on { border-color: var(--bg); box-shadow: 0 0 0 2px var(--paper) inset; }
-  .annot-bar .tool { border: 1px solid #cfd0cb; background: #fff; padding: 5px 10px; cursor: pointer; font: inherit; }
-  .annot-bar .tool.on { background: var(--bg); color: var(--paper); }
-  .annot-bar .grow { flex: 1; }
-  .annot-bar .save { background: var(--bg); color: var(--paper); border-color: var(--bg); }
+  .annot-swatches { position: absolute; left: 24px; top: 468px; display: flex; gap: 6px; }
+  .annot-swatches button { width: 16px; height: 16px; border-radius: 50%; border: 0; padding: 0; background: var(--c); cursor: pointer; }
+  .annot-swatches button.on { box-shadow: 0 0 0 1.5px #fff, 0 0 0 2.5px #000; }
+  /* the pencil is the pen tool; it lifts while it's the active tool */
+  .annot-pen { position: absolute; left: 16px; top: 484px; width: 56px; height: 66px; border: 0; padding: 0; background: none; cursor: pointer;
+    overflow: hidden; }
+  .annot-pen img { display: block; width: 56px; height: 66px; object-fit: cover; transform: translateY(8px); transition: transform .15s; }
+  .annot-pen.on img { transform: none; }
+  .annot-tools { position: absolute; left: 112px; top: 492px; display: flex; gap: 24px; }
+  .annot-tools button { width: 28px; border: 0; padding: 0; background: none; cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; gap: 3px; font: 12px Inter, sans-serif; color: #000; opacity: .55; transition: opacity .15s; }
+  .annot-tools button:hover, .annot-tools button.on { opacity: 1; }
+  .annot-tools button.on span { text-decoration: underline; text-underline-offset: 3px; }
+  .annot-tools button[data-act] { opacity: 1; }
+  .annot-tools img { display: block; }
+  .annot-save { position: absolute; left: 334px; top: 492px; width: 100px; height: 42px; border: 0; border-radius: 4px; background: #000;
+    color: #fff; font: 14px/24px Inter, sans-serif; cursor: pointer; }
+  .annot-close { position: absolute; right: 12px; top: 18px; border: 0; background: none; font-size: 20px; line-height: 1; color: #4b4b4b; cursor: pointer; padding: 4px; }
 
   /* ---------- access code (Figma 39:112): first visit, before the diary opens ---------- */
   /* covers the whole window; the card scales with the diary frame (--k is set by fit()) */
@@ -555,24 +567,25 @@
   </form>
 </div>
 
-<div class="annot" id="annot" role="dialog" aria-label="Edit this item" hidden>
+<div class="annot" id="annot" role="dialog" aria-labelledby="annotTitle" hidden>
   <div class="annot-card">
-    <div class="annot-stage" id="annotStage"></div>
-    <div class="annot-bar">
-      <button class="sw on" style="--c:#d1233d" data-color="#d1233d" aria-label="Red pen"></button>
-      <button class="sw" style="--c:#212121" data-color="#212121" aria-label="Black pen"></button>
-      <button class="sw" style="--c:#2f6fd6" data-color="#2f6fd6" aria-label="Blue pen"></button>
-      <button class="sw" style="--c:#f2c200" data-color="#f2c200" aria-label="Yellow pen"></button>
-      <button class="tool on" data-tool="pen">Pen</button>
-      <button class="tool" data-tool="text">Text</button>
-      <button class="tool crop-only" data-tool="crop">Crop</button>
-      <button class="tool" data-tool="erase">Eraser</button>
-      <button class="tool" data-act="undo">Undo</button>
-      <button class="tool" data-act="clear">Clear</button>
-      <span class="grow"></span>
-      <button class="tool" data-act="cancel">Cancel</button>
-      <button class="tool save" data-act="save">Save</button>
+    <p class="annot-title" id="annotTitle">Annotate your Image</p>
+    <button class="annot-close" data-act="cancel" aria-label="Cancel without saving">×</button>
+    <div class="annot-area"><div class="annot-stage" id="annotStage"></div></div>
+    <div class="annot-swatches" role="group" aria-label="Colour">
+      <button class="sw on" style="--c:#f11212" data-color="#f11212" aria-label="Red"></button>
+      <button class="sw" style="--c:#f8d50e" data-color="#f8d50e" aria-label="Yellow"></button>
+      <button class="sw" style="--c:#143cec" data-color="#143cec" aria-label="Blue"></button>
+      <button class="sw" style="--c:#3d3b3b" data-color="#3d3b3b" aria-label="Black"></button>
     </div>
+    <button class="annot-pen on" data-tool="pen" aria-label="Pen"><img src="assets/tool-pencil.png" alt=""></button>
+    <div class="annot-tools">
+      <button data-tool="text"><img src="assets/icon-text.svg" alt="" width="24" height="24"><span>Text</span></button>
+      <button data-tool="erase"><img src="assets/icon-eraser.svg" alt="" width="24" height="24"><span>Erase</span></button>
+      <button class="crop-only" data-tool="crop"><img src="assets/icon-crop.svg" alt="" width="24" height="24"><span>Crop</span></button>
+      <button data-act="undo"><img src="assets/icon-undo.svg" alt="" width="24" height="24"><span>Undo</span></button>
+    </div>
+    <button class="annot-save" data-act="save">Save</button>
   </div>
 </div>
 
@@ -1306,6 +1319,7 @@
     annotStage.replaceChildren(src);
     annotStage.className = 'annot-stage';
     annot.querySelector('.crop-only').hidden = m.kind !== 'image';
+    document.getElementById('annotTitle').textContent = `Annotate your ${m.kind === 'image' ? 'Image' : 'Video'}`;
     annot.hidden = false;
     const ready = () => {
       const w = src.clientWidth, h = src.clientHeight, dpr = devicePixelRatio || 1;
