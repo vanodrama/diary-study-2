@@ -231,7 +231,12 @@
   .tab { position: absolute; left: 0; width: 19px; height: 81px; border: 0; cursor: pointer; background: var(--c);
     clip-path: polygon(0 0, 100% 16%, 100% 76%, 0 100%); transition: width .2s; }
   .tab:hover, .tab.on { width: 24px; }
-  .tab.locked { opacity: .35; cursor: not-allowed; }
+  /* locked days show a darker shade of their colour (Intro, 01 and Rough never lock) */
+  .tab.locked { cursor: not-allowed; }
+  .tab.locked[data-i="2"] { background: #58542e; }
+  .tab.locked[data-i="3"] { background: #2c4831; }
+  .tab.locked[data-i="4"] { background: #543a20; }
+  .tab.locked[data-i="5"] { background: #48425f; }
   .tab.locked:hover { width: 19px; }
   .tab.on { z-index: 2; }
   .tab span { position: absolute; left: 3px; top: 50%; width: 13px; transform: translateY(-50%) rotate(-90deg);
@@ -251,21 +256,31 @@
   .media.text .grip { height: 12px; flex: none; cursor: grab; background: rgba(0,0,0,.05); }
   .media.text textarea { flex: 1; border: 0; background: transparent; resize: none; outline: none; padding: 4px 8px 8px;
     font: 12px/1.4 Inter, sans-serif; color: var(--ink); letter-spacing: -.3px; }
-  .media .rz { position: absolute; right: -5px; bottom: -5px; width: 12px; height: 12px; border-radius: 2px; cursor: nwse-resize;
+  /* a resize handle on each corner */
+  .media .rz { position: absolute; width: 12px; height: 12px; border-radius: 2px; z-index: 2;
     background: var(--paper); border: 1.5px solid var(--bg); opacity: 0; transition: opacity .15s; }
-  .media .ann-btn { position: absolute; top: -8px; left: -8px; width: 20px; height: 20px; border-radius: 50%; border: 0;
-    background: var(--bg); color: var(--paper); font-size: 11px; line-height: 20px; cursor: pointer; opacity: 0; transition: opacity .15s; }
-  .media:hover .rz, .media:hover .ann-btn, .media .ann-btn:focus-visible { opacity: 1; }
+  .media .rz.nw { left: -5px; top: -5px; cursor: nwse-resize; }
+  .media .rz.ne { right: -5px; top: -5px; cursor: nesw-resize; }
+  .media .rz.sw { left: -5px; bottom: -5px; cursor: nesw-resize; }
+  .media .rz.se { right: -5px; bottom: -5px; cursor: nwse-resize; }
+  .media:hover .rz { opacity: 1; }
   .media.lifted { z-index: 50 !important; cursor: grabbing; box-shadow: 4px 8px 18px rgba(0,0,0,.3); }
-  .turn .ann-btn, .turn .rz { display: none; }
+  .turn .rz { display: none; }
+  /* a cropped image shows only its crop box, with the drawing cropped the same way */
+  .media .crop { position: relative; overflow: hidden; }
+  .media .crop-in { position: absolute; }
+  .media .crop-in > img:first-child { height: 100%; }
+  /* right-click menu on an item */
+  .ctx { position: absolute; z-index: 60; min-width: 120px; padding: 4px; background: var(--paper); border-radius: 6px;
+    box-shadow: 2.5px 2.5px 12px rgba(0,0,0,.3); animation: menuIn .12s ease-out; }
+  .ctx button { display: block; width: 100%; border: 0; background: none; text-align: left; padding: 7px 10px; border-radius: 4px;
+    font: 12px Inter, sans-serif; letter-spacing: -.3px; color: var(--ink); cursor: pointer; }
+  .ctx button:hover, .ctx button:focus-visible { background: rgba(0,0,0,.07); outline: none; }
+  .ctx button.danger { color: var(--rough); }
   .file-chip { display: flex; align-items: center; gap: 6px; padding: 7px 10px; background: var(--paper); border: 1px solid #cfd0cb;
     font: 11px Inter, sans-serif; color: var(--ink); text-decoration: none; letter-spacing: -.3px; max-width: 300px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .file-chip img { width: 14px; height: 14px; flex: none; }
-  .media .rm { position: absolute; top: -8px; right: -8px; width: 18px; height: 18px; border-radius: 50%; border: 0;
-    background: var(--bg); color: var(--paper); font-size: 12px; line-height: 18px; cursor: pointer; opacity: 0; transition: opacity .15s; }
-  .media:hover .rm, .media .rm:focus-visible { opacity: 1; }
-  .turn .rm { display: none; }
 
   /* add-media button + menu, in binder coordinates from the design */
   .fab, .fab-menu { position: absolute; z-index: 6; background: var(--paper); border: 0; border-radius: 44px;
@@ -323,10 +338,16 @@
   /* ---------- annotation editor ---------- */
   .annot { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.7); display: grid; place-items: center; }
   .annot-card { background: var(--paper); padding: 14px; box-shadow: 0 10px 40px rgba(0,0,0,.5); display: flex; flex-direction: column; gap: 10px; }
-  .annot-stage { position: relative; line-height: 0; }
+  .annot-stage { position: relative; line-height: 0; align-self: center; }
   .annot-stage img, .annot-stage video { display: block; max-width: 80vw; max-height: 68vh; }
   .annot-stage canvas { position: absolute; left: 0; top: 0; cursor: crosshair; touch-action: none; }
-  .annot-bar { display: flex; align-items: center; gap: 8px; font: 12px Inter, sans-serif; }
+  .annot-stage.text canvas { cursor: text; }
+  .annot-text { position: absolute; z-index: 2; min-width: 120px; border: 1px dashed currentColor; background: rgba(255,255,255,.6);
+    outline: none; padding: 0 2px; font: 16px/1.2 Inter, sans-serif; line-height: 1.2; }
+  .crop-box { position: absolute; pointer-events: none; border: 1.5px dashed #fff; box-shadow: 0 0 0 9999px rgba(0,0,0,.45); }
+  .annot-stage { overflow: hidden; }
+  .annot-card { max-width: 92vw; }
+  .annot-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font: 12px Inter, sans-serif; }
   .annot-bar .sw { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; background: var(--c); }
   .annot-bar .sw.on { border-color: var(--bg); box-shadow: 0 0 0 2px var(--paper) inset; }
   .annot-bar .tool { border: 1px solid #cfd0cb; background: #fff; padding: 5px 10px; cursor: pointer; font: inherit; }
@@ -375,12 +396,12 @@
     animation: menuIn .25s ease-out; }
   .task-card .lines { position: absolute; left: 0; top: 24px; }
   .task-card .red { position: absolute; left: 41px; top: -9px; transform-origin: 0 0; transform: rotate(90deg); }
-  .task-card .kicker { position: absolute; left: 169px; top: 52px; display: flex; align-items: center; gap: 5px;
+  .task-card .kicker { position: absolute; left: calc(50% + 16px); top: 50px; transform: translateX(-50%); display: flex; align-items: center; gap: 16px;
     font-size: 14px; line-height: 11px; letter-spacing: -.84px; color: #4b4b4b; white-space: nowrap; }
-  .task-card .kicker button { width: 16px; height: 16px; border: 0; padding: 0; background: none; cursor: pointer; display: grid; place-items: center; }
+  .task-card .kicker button { width: 20px; height: 20px; border: 0; padding: 0; background: none; cursor: pointer; display: grid; place-items: center; }
   .task-card .kicker button:disabled { opacity: .25; cursor: default; }
   .task-card .kicker img { display: block; }
-  .task-card h3 { position: absolute; left: 222.5px; top: 96px; width: 305px; transform: translateX(-50%); text-align: center;
+  .task-card h3 { position: absolute; left: 227.5px; top: 94px; width: 305px; transform: translateX(-50%); text-align: center;
     font-weight: 700; font-size: 24px; line-height: 24px; letter-spacing: -1.44px; color: #4b4b4b; }
   .task-card .details { position: absolute; left: 227.5px; top: 146px; width: 315px; transform: translateX(-50%); text-align: center;
     font-size: 16px; line-height: 24px; letter-spacing: -.96px; color: #4b4b4b; }
@@ -489,9 +510,9 @@
       <img class="red" src="assets/margin-line.svg" alt="" width="498" height="1">
       <button class="shut" id="taskClose" aria-label="Close today’s task">×</button>
       <div class="kicker">
-        <button id="taskPrev" aria-label="Previous day’s task"><img src="assets/icon-caret-small-prev.svg" alt="" width="16" height="16" style="transform:rotate(90deg)"></button>
-        <span id="taskLabel">Today’s Task</span>
-        <button id="taskNext" aria-label="Next day’s task"><img src="assets/icon-caret-small-next.svg" alt="" width="16" height="16" style="transform:rotate(-90deg)"></button>
+        <button id="taskPrev" aria-label="Previous day’s task"><img src="assets/icon-caret-round-prev.svg" alt="" width="20" height="20" style="transform:rotate(90deg)"></button>
+        <span id="taskLabel">Day 01</span>
+        <button id="taskNext" aria-label="Next day’s task"><img src="assets/icon-caret-round-next.svg" alt="" width="20" height="20" style="transform:rotate(-90deg)"></button>
       </div>
       <h3 id="taskTitle"></h3><p class="details" id="taskText"></p>
       <p class="tip" id="taskTip"></p>
@@ -534,7 +555,7 @@
   </form>
 </div>
 
-<div class="annot" id="annot" role="dialog" aria-label="Draw on this item" hidden>
+<div class="annot" id="annot" role="dialog" aria-label="Edit this item" hidden>
   <div class="annot-card">
     <div class="annot-stage" id="annotStage"></div>
     <div class="annot-bar">
@@ -542,6 +563,9 @@
       <button class="sw" style="--c:#212121" data-color="#212121" aria-label="Black pen"></button>
       <button class="sw" style="--c:#2f6fd6" data-color="#2f6fd6" aria-label="Blue pen"></button>
       <button class="sw" style="--c:#f2c200" data-color="#f2c200" aria-label="Yellow pen"></button>
+      <button class="tool on" data-tool="pen">Pen</button>
+      <button class="tool" data-tool="text">Text</button>
+      <button class="tool crop-only" data-tool="crop">Crop</button>
       <button class="tool" data-tool="erase">Eraser</button>
       <button class="tool" data-act="undo">Undo</button>
       <button class="tool" data-act="clear">Clear</button>
@@ -814,12 +838,12 @@
   ready.then(() => { document.getElementById('coverInside').innerHTML = pages(sections[0])[0]; });
 
   // Day tabs unlock one at a time: day n opens on the n-th day from the participant's start date
-  // (their own local calendar) and stays open after that. Intro and the red Rough section are always open. Without a start date
+  // (their own local calendar) and stays open after that. Intro, Day 1 and the red Rough section are always open. Without a start date
   // (no participant link, or the settings didn't load) every day stays open.
   const DAY_MS = 864e5;
   const shortDate = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   let openDay = null, startISO = null;
-  const isOpen = s => !s.day || s.tab === 6 || openDay === null || s.day <= openDay;
+  const isOpen = s => !s.day || s.day === 1 || s.tab === 6 || openDay === null || s.day <= openDay;
   function unlockFrom(start) {
     startISO = start;
     const t = new Date(), today = Date.UTC(t.getFullYear(), t.getMonth(), t.getDate());
@@ -831,7 +855,7 @@
   }
   function drawLocks() {
     tabs.querySelectorAll('.tab').forEach((t, i) => {
-      const locked = i >= 1 && i <= 5 && openDay !== null && i > openDay;
+      const locked = i >= 2 && i <= 5 && openDay !== null && i > openDay;
       t.classList.toggle('locked', locked);
       t.setAttribute('aria-disabled', String(locked));
       const when = startISO && shortDate(new Date(Date.parse(startISO + 'T00:00:00Z') + (i - 1) * DAY_MS).toISOString().slice(0, 10));
@@ -1066,17 +1090,18 @@
 
   function mediaHTML(m) {
     const name = esc(m.content.name);
-    const body = m.kind === 'image' ? `<img src="${m.url}" alt="${name}" draggable="false">`
-      : m.kind === 'video' ? `<video src="${m.url}" controls preload="metadata"></video>`
+    const ann = m.content.ann ? `<img class="ann-ov" src="${m.content.ann}" alt="">` : '';
+    const c = m.kind === 'image' && m.content.crop, ar = m.content.ar || 1;
+    const body = m.kind === 'image'
+        ? (c ? `<div class="crop" style="aspect-ratio:${c.w * ar}/${c.h}"><div class="crop-in" style="width:${100 / c.w}%;height:${100 / c.h}%;left:${-c.x / c.w * 100}%;top:${-c.y / c.h * 100}%">`
+             + `<img src="${m.url}" alt="${name}" draggable="false">${ann}</div></div>`
+           : `<img src="${m.url}" alt="${name}" draggable="false">${ann}`)
+      : m.kind === 'video' ? `<video src="${m.url}" controls preload="metadata"></video>${ann}`
       : m.kind === 'text' ? `<div class="grip" title="Drag to move"></div><textarea data-item="${m.id}" placeholder="Type a note…" aria-label="Note">${esc(m.content.text)}</textarea>`
       : `<a class="file-chip" href="${m.url}" target="_blank" rel="noopener"><img src="assets/icon-file.svg" alt="">${name}</a>`;
-    const visual = m.kind === 'image' || m.kind === 'video';
     const size = m.kind === 'document' ? '' : `width:${m.w}px;` + (m.kind === 'text' ? `height:${m.h}px;` : '');
-    return `<div class="media ${m.kind}" data-id="${m.id}" style="left:${m.x}px;top:${m.y}px;z-index:${m.z || 0};${size}">${body}
-      ${visual && m.content.ann ? `<img class="ann-ov" src="${m.content.ann}" alt="">` : ''}
-      ${visual ? `<button class="ann-btn" aria-label="Draw on ${name}" title="Draw on it">✎</button>` : ''}
-      <button class="rm" aria-label="Remove ${name || 'note'}">×</button>
-      ${m.kind === 'document' ? '' : '<i class="rz" title="Drag to resize"></i>'}</div>`;
+    const handles = m.kind === 'document' ? '' : ['nw', 'ne', 'sw', 'se'].map(c => `<i class="rz ${c}" data-c="${c}"></i>`).join('');
+    return `<div class="media ${m.kind}" data-id="${m.id}" style="left:${m.x}px;top:${m.y}px;z-index:${m.z || 0};${size}" title="Drag to move · right-click to edit or delete">${body}${handles}</div>`;
   }
 
   // Fill every rough page on screen (including a turning sheet) that hasn't been drawn yet
@@ -1099,12 +1124,15 @@
   }
 
   async function addFiles(files, kind) {
+    const turning = sections[current].kind === 'day';
     const page = roughPage();
+    let last;
     for (const f of files) {
       const n = media.filter(m => m.page === page).length;
       const m = { id: newId(), page, kind, content: { name: f.name }, blob: f, url: URL.createObjectURL(f),
         x: 15.5 + (n % 6) * 20, y: 15.5 + (n % 6) * 24, w: kind === 'document' ? 200 : 321, h: 0, z: ++topZ };
       media.push(m);
+      last = m;
       redraw(page);
       mediaStore.add(m).catch(e => {
         console.warn('upload failed', e);
@@ -1113,6 +1141,8 @@
         alert(`“${f.name}” couldn't be uploaded. Check your connection and try again.`);
       });
     }
+    // a new image opens straight in the editor (the last one, when several were picked)
+    if (kind === 'image' && last) setTimeout(() => openAnnot(last), turning ? 1000 : 50);
   }
   function addNote() {
     const page = roughPage();
@@ -1145,40 +1175,76 @@
     input.onchange = () => { addFiles([...input.files], kind); input.value = ''; closeMenu(); };
   });
 
-  binder.addEventListener('click', e => {
-    const el = e.target.closest('.media');
-    if (!el) return;
-    const m = media.find(m => m.id === el.dataset.id);
-    if (e.target.closest('.ann-btn')) return openAnnot(m, el);
-    if (!e.target.closest('.rm')) return;
+  function removeItem(m) {
     media = media.filter(x => x !== m);
     clearTimeout(itemTimers[m.id]);
     mediaStore.remove(m).catch(e => console.warn('remove not saved', e));
     if (m.url) URL.revokeObjectURL(m.url);
-    el.remove();
+    binder.querySelectorAll(`.media[data-id="${m.id}"]`).forEach(el => el.remove());
+  }
+  function editItem(m, el) {
+    if (m.kind === 'image' || m.kind === 'video') openAnnot(m, el);
+    else if (m.kind === 'text') el.querySelector('textarea').focus();
+    else window.open(m.url, '_blank');
+  }
+
+  // Right-click an item for Edit and Delete
+  let ctxMenu = null;
+  const closeCtx = () => { ctxMenu?.remove(); ctxMenu = null; };
+  binder.addEventListener('contextmenu', e => {
+    const el = e.target.closest('.media');
+    if (!el || e.target.closest('textarea') && document.activeElement === e.target) return;
+    e.preventDefault();
+    closeCtx();
+    const m = media.find(m => m.id === el.dataset.id);
+    const scale = binder.getBoundingClientRect().width / binder.offsetWidth, br = binder.getBoundingClientRect();
+    ctxMenu = document.createElement('div');
+    ctxMenu.className = 'ctx';
+    ctxMenu.setAttribute('role', 'menu');
+    ctxMenu.innerHTML = `<button role="menuitem" data-do="edit">${m.kind === 'document' ? 'Open' : 'Edit'}</button>`
+      + `<button role="menuitem" class="danger" data-do="delete">Delete</button>`;
+    ctxMenu.style.left = (e.clientX - br.left) / scale + 'px';
+    ctxMenu.style.top = (e.clientY - br.top) / scale + 'px';
+    binder.appendChild(ctxMenu);
+    ctxMenu.querySelector('button').focus();
+    ctxMenu.onclick = ev => {
+      const act = ev.target.closest('[data-do]')?.dataset.do;
+      closeCtx();
+      if (act === 'edit') editItem(m, el);
+      if (act === 'delete') removeItem(m);
+    };
   });
+  addEventListener('pointerdown', e => { if (ctxMenu && !e.target.closest('.ctx')) closeCtx(); });
+  addEventListener('keydown', e => { if (ctxMenu && e.key === 'Escape') closeCtx(); }, true);
 
   // Drag an item (lifting it above both pages so it can cross the spine), or resize it from its corner
   binder.addEventListener('pointerdown', e => {
     const el = e.target.closest('.media');
-    if (!el || e.button || e.target.closest('.rm, .ann-btn, textarea')) return;
+    if (!el || e.button || e.target.closest('textarea')) return;
     const m = media.find(m => m.id === el.dataset.id);
     const scale = binder.getBoundingClientRect().width / binder.offsetWidth;
     const sx = e.clientX, sy = e.clientY;
     const grid = el.closest('.grid');
     el.style.zIndex = m.z = ++topZ;
 
-    if (e.target.closest('.rz')) {
+    const handle = e.target.closest('.rz');
+    if (handle) {
+      // drag any corner; the opposite corner stays put. Images and videos keep their shape.
       e.preventDefault();
-      const ow = el.offsetWidth, oh = el.offsetHeight;
+      const c = handle.dataset.c, ow = el.offsetWidth, oh = el.offsetHeight, ox = m.x, oy = m.y, ratio = ow / oh;
       const move = ev => {
         const dx = (ev.clientX - sx) / scale, dy = (ev.clientY - sy) / scale;
-        m.w = Math.round(Math.max(60, Math.min(grid.clientWidth - m.x, ow + dx)));
-        el.style.width = m.w + 'px';
-        if (m.kind === 'text') {
-          m.h = Math.round(Math.max(40, Math.min(grid.clientHeight - m.y, oh + dy)));
-          el.style.height = m.h + 'px';
-        }
+        const maxW = c.includes('w') ? ox + ow : grid.clientWidth - ox;
+        const w = Math.max(60, Math.min(maxW, c.includes('e') ? ow + dx : ow - dx));
+        let h = m.kind === 'text' ? Math.max(40, c.includes('s') ? oh + dy : oh - dy) : w / ratio;
+        h = Math.min(h, c.includes('n') ? oy + oh : grid.clientHeight - oy);
+        m.w = Math.round(m.kind === 'text' ? w : Math.min(w, h * ratio));
+        if (m.kind === 'text') m.h = Math.round(h);
+        const nh = m.kind === 'text' ? m.h : m.w / ratio;
+        m.x = Math.round(c.includes('w') ? ox + ow - m.w : ox);
+        m.y = Math.round(c.includes('n') ? oy + oh - nh : oy);
+        Object.assign(el.style, { width: m.w + 'px', left: m.x + 'px', top: m.y + 'px' });
+        if (m.kind === 'text') el.style.height = m.h + 'px';
       };
       const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); saveItem(m); };
       addEventListener('pointermove', move);
@@ -1227,23 +1293,28 @@
   });
 
   // ---------- annotation editor ----------
-  // Strokes are drawn on a transparent canvas over the image or video frame and saved as a PNG
-  // that's laid over the item at whatever size it's shown.
+  // Pen strokes and text are drawn on a transparent canvas over the image (or video frame) and saved
+  // as a PNG laid over the item at whatever size it's shown. Crop (images only) is kept as fractions of
+  // the full image, so the original is never changed.
   const annot = document.getElementById('annot');
   const annotStage = document.getElementById('annotStage');
   let annotState = null;
   function openAnnot(m, el) {
     const src = document.createElement(m.kind === 'image' ? 'img' : 'video');
     src.src = m.url;
-    if (m.kind === 'video') { src.muted = true; src.preload = 'auto'; src.currentTime = el.querySelector('video')?.currentTime || 0; }
+    if (m.kind === 'video') { src.muted = true; src.preload = 'auto'; src.currentTime = el?.querySelector('video')?.currentTime || 0; }
     annotStage.replaceChildren(src);
+    annotStage.className = 'annot-stage';
+    annot.querySelector('.crop-only').hidden = m.kind !== 'image';
     annot.hidden = false;
     const ready = () => {
       const w = src.clientWidth, h = src.clientHeight, dpr = devicePixelRatio || 1;
       const cv = document.createElement('canvas');
       cv.width = w * dpr; cv.height = h * dpr;
       cv.style.width = w + 'px'; cv.style.height = h + 'px';
-      annotStage.appendChild(cv);
+      const box = document.createElement('div');
+      box.className = 'crop-box';
+      annotStage.append(cv, box);
       const ctx = cv.getContext('2d');
       ctx.lineCap = ctx.lineJoin = 'round';
       if (m.content.ann) {
@@ -1251,25 +1322,90 @@
         prev.onload = () => ctx.drawImage(prev, 0, 0, cv.width, cv.height);
         prev.src = m.content.ann;
       }
-      annotState = { m, cv, ctx, dpr, color: annot.querySelector('.sw.on').dataset.color, erase: false, undo: [], dirty: false };
+      annotState = { m, src, cv, ctx, dpr, box, color: annot.querySelector('.sw.on').dataset.color, undo: [],
+        crop: m.content.crop ? { ...m.content.crop } : null };
+      setTool('pen');
+      drawCropBox();
     };
     if (m.kind === 'image' ? src.complete && src.naturalWidth : src.readyState >= 2) requestAnimationFrame(ready);
     else src.addEventListener(m.kind === 'image' ? 'load' : 'loadeddata', () => requestAnimationFrame(ready), { once: true });
   }
-  function closeAnnot() { annot.hidden = true; annotStage.replaceChildren(); annotState = null; }
+  function closeAnnot() { commitText(); annot.hidden = true; annotStage.replaceChildren(); annotState = null; }
+  function setTool(tool) {
+    if (annotState) annotState.tool = tool;
+    annot.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === tool));
+    annotStage.classList.toggle('text', tool === 'text');
+    commitText();
+  }
+  function drawCropBox() {
+    const a = annotState;
+    if (!a) return;
+    a.box.hidden = !a.crop;
+    if (!a.crop) return;
+    const W = a.cv.clientWidth, H = a.cv.clientHeight;
+    Object.assign(a.box.style, { left: a.crop.x * W + 'px', top: a.crop.y * H + 'px', width: a.crop.w * W + 'px', height: a.crop.h * H + 'px' });
+  }
+  const snapshot = a => { a.undo.push({ px: a.ctx.getImageData(0, 0, a.cv.width, a.cv.height), crop: a.crop && { ...a.crop } }); if (a.undo.length > 30) a.undo.shift(); };
+
+  // Text: click where it should go, type, then Enter (or click elsewhere) to place it
+  let textInput = null;
+  function commitText() {
+    const a = annotState, t = textInput;
+    textInput = null;
+    if (!t) return;
+    t.remove();
+    if (!a || !t.value.trim()) return;
+    snapshot(a);
+    a.ctx.globalCompositeOperation = 'source-over';
+    a.ctx.fillStyle = a.color;
+    a.ctx.font = `${16 * a.dpr}px Inter, sans-serif`;
+    a.ctx.textBaseline = 'top';
+    a.ctx.fillText(t.value, (parseFloat(t.style.left) + 3) * a.dpr, (parseFloat(t.style.top) + 1) * a.dpr);
+  }
   annotStage.addEventListener('pointerdown', e => {
     const a = annotState;
     if (!a || e.target !== a.cv) return;
-    a.undo.push(a.ctx.getImageData(0, 0, a.cv.width, a.cv.height));
-    if (a.undo.length > 30) a.undo.shift();
-    a.dirty = true;
     const r = a.cv.getBoundingClientRect();
+    if (a.tool === 'text') {
+      e.preventDefault();
+      commitText();
+      textInput = document.createElement('input');
+      textInput.className = 'annot-text';
+      textInput.style.left = e.clientX - r.left + 'px';
+      textInput.style.top = e.clientY - r.top - 10 + 'px';
+      textInput.style.color = a.color;
+      textInput.addEventListener('keydown', ev => {
+        if (ev.key === 'Enter') commitText();
+        if (ev.key === 'Escape') { ev.stopPropagation(); textInput.value = ''; commitText(); }
+      });
+      annotStage.appendChild(textInput);
+      setTimeout(() => textInput?.focus());
+      return;
+    }
+    snapshot(a);
+    a.cv.setPointerCapture(e.pointerId);
+    if (a.tool === 'crop') {
+      // drag a box; what's outside it is hidden on the page
+      const fx = ev => Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width));
+      const fy = ev => Math.max(0, Math.min(1, (ev.clientY - r.top) / r.height));
+      const x0 = fx(e), y0 = fy(e);
+      const move = ev => {
+        const x1 = fx(ev), y1 = fy(ev);
+        a.crop = { x: Math.min(x0, x1), y: Math.min(y0, y1), w: Math.abs(x1 - x0), h: Math.abs(y1 - y0) };
+        drawCropBox();
+      };
+      a.cv.addEventListener('pointermove', move);
+      a.cv.addEventListener('pointerup', () => {
+        a.cv.removeEventListener('pointermove', move);
+        if (a.crop && (a.crop.w < .03 || a.crop.h < .03)) { a.crop = null; drawCropBox(); }
+      }, { once: true });
+      return;
+    }
     const pt = ev => [(ev.clientX - r.left) * a.dpr, (ev.clientY - r.top) * a.dpr];
     let [lx, ly] = pt(e);
-    a.ctx.globalCompositeOperation = a.erase ? 'destination-out' : 'source-over';
+    a.ctx.globalCompositeOperation = a.tool === 'erase' ? 'destination-out' : 'source-over';
     a.ctx.strokeStyle = a.color;
-    a.ctx.lineWidth = (a.erase ? 18 : 3.5) * a.dpr;
-    a.cv.setPointerCapture(e.pointerId);
+    a.ctx.lineWidth = (a.tool === 'erase' ? 18 : 3.5) * a.dpr;
     const move = ev => {
       const [x, y] = pt(ev);
       a.ctx.beginPath(); a.ctx.moveTo(lx, ly); a.ctx.lineTo(x, y); a.ctx.stroke();
@@ -1282,27 +1418,33 @@
   annot.addEventListener('click', e => {
     const a = annotState;
     if (e.target === annot) return closeAnnot();
-    const sw = e.target.closest('.sw'), tool = e.target.closest('[data-tool], [data-act]');
+    const sw = e.target.closest('.sw');
     if (sw) {
       annot.querySelectorAll('.sw').forEach(x => x.classList.toggle('on', x === sw));
-      annot.querySelector('[data-tool]').classList.remove('on');
-      if (a) { a.color = sw.dataset.color; a.erase = false; }
+      if (a) a.color = sw.dataset.color;
+      if (textInput) textInput.style.color = sw.dataset.color;
+      if (a && (a.tool === 'erase' || a.tool === 'crop')) setTool('pen');
       return;
     }
-    if (!tool) return;
-    if (tool.dataset.tool === 'erase') { const on = tool.classList.toggle('on'); if (a) a.erase = on; return; }
-    const act = tool.dataset.act;
+    const tool = e.target.closest('[data-tool]')?.dataset.tool;
+    if (tool) return setTool(tool);
+    const act = e.target.closest('[data-act]')?.dataset.act;
     if (act === 'cancel') return closeAnnot();
-    if (!a) return;
-    if (act === 'undo' && a.undo.length) a.ctx.putImageData(a.undo.pop(), 0, 0);
-    if (act === 'clear') { a.undo.push(a.ctx.getImageData(0, 0, a.cv.width, a.cv.height)); a.ctx.clearRect(0, 0, a.cv.width, a.cv.height); a.dirty = true; }
+    if (!a || !act) return;
+    commitText();
+    if (act === 'undo' && a.undo.length) { const u = a.undo.pop(); a.ctx.putImageData(u.px, 0, 0); a.crop = u.crop; drawCropBox(); }
+    if (act === 'clear') { snapshot(a); a.ctx.clearRect(0, 0, a.cv.width, a.cv.height); a.crop = null; drawCropBox(); }
     if (act === 'save') {
       const px = a.ctx.getImageData(0, 0, a.cv.width, a.cv.height).data;
       let blank = true;
       for (let i = 3; i < px.length; i += 4) if (px[i]) { blank = false; break; }
       a.m.content.ann = blank ? null : a.cv.toDataURL('image/png');
+      if (a.m.kind === 'image') {
+        a.m.content.crop = a.crop;
+        a.m.content.ar = a.src.naturalWidth / a.src.naturalHeight;
+      }
       redraw(a.m.page);
-      mediaStore.save(a.m).catch(e => console.warn('drawing not saved', e));
+      mediaStore.save(a.m).catch(e => console.warn('edit not saved', e));
       closeAnnot();
     }
   });
@@ -1371,7 +1513,7 @@
   const lastOpenDay = () => openDay === null ? 5 : openDay;
   function showTask(day) {
     const d = days[taskDay = day];
-    document.getElementById('taskLabel').textContent = openDay === null || day === openDay ? 'Today’s Task' : `Day ${day}’s Task`;
+    document.getElementById('taskLabel').textContent = `Day ${String(day).padStart(2, '0')}`;
     document.getElementById('taskPrev').disabled = day <= 1;
     document.getElementById('taskNext').disabled = day >= lastOpenDay();
     document.getElementById('taskTitle').textContent = d.title;
