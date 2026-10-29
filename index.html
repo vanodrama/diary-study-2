@@ -85,16 +85,19 @@
     font: 10px Inter, sans-serif; letter-spacing: 1.8px; color: var(--ink); }
   .page-date input::placeholder { color: #8a8a8a; }
   .page-date img { display: block; }
+  .page-date .date-shown { cursor: pointer; }
+  .page-date .date-pick { position: absolute; left: 0; top: 0; width: 100%; height: 14px; opacity: 0; pointer-events: none; }
   /* Figma 40:536/537/544: day title, "Today my day was …" line, and the mood faces */
   .day-summary { position: absolute; left: 12px; top: 37px; width: 311px; height: 52px; border: 0; background: transparent;
     resize: none; outline: none; font: 12px Inter, sans-serif; letter-spacing: -.72px; color: var(--ink); }
   .day-summary::placeholder { color: #8a8a8a; }
-  .mood { position: absolute; left: 273px; top: 94px; width: 126px; height: 27px; overflow: hidden; }
-  .mood > img { position: absolute; left: 0; top: 0; width: 100%; height: 117.14%; max-width: none; pointer-events: none; }
-  .mood button { position: absolute; top: 2.5px; width: 23px; height: 23px; margin-left: -11.5px; border-radius: 50%;
-    border: 0; padding: 0; background: none; cursor: pointer; transition: box-shadow .15s, background .15s; }
-  .mood button:hover { background: rgba(0,0,0,.06); }
-  .mood button.on { box-shadow: 0 0 0 1.5px var(--ink) inset; background: rgba(0,0,0,.04); }
+  .mood { position: absolute; left: 273px; top: 94px; width: 126px; height: 27px; display: flex; justify-content: space-between; align-items: center; }
+  .mood button { width: 24px; height: 24px; border-radius: 50%; font-size: 17px; line-height: 24px; text-align: center;
+    filter: grayscale(1); opacity: .5;
+    border: 0; padding: 0; background: none; cursor: pointer; transition: filter .15s, opacity .15s, transform .15s; }
+  .mood button:hover { opacity: .85; }
+  /* the chosen face shows in colour */
+  .mood button.on { filter: none; opacity: 1; transform: scale(1.15); }
   .turn .mood button, .turn .page-date input, .turn .day-summary { pointer-events: none; }
 
   /* ---------- binder (open spread) ---------- */
@@ -715,16 +718,10 @@
     ['st-show', 'sticker-show.png', "Show, don't just tell. Feel free to add screenshots, prompts, links, or short recordings."],
     ['st-mess', 'sticker-mess.png', "Make a mess! There's a rough work section where you can jot down ideas or brainstorm."],
   ];
-  const MOODS = ['Rough day', 'Not great', 'Okay', 'Good', 'Great day'];
+  const MOODS = [['😞', 'Rough day'], ['😕', 'Not great'], ['😐', 'Okay'], ['🙂', 'Good'], ['😄', 'Great day']];
   const DAY_WORDS = ['', 'one', 'two', 'three', 'four', 'five'];
-  // dates are typed DD/MM/YYYY and stored as YYYY-MM-DD (the days table's date type)
+  // dates show as DD/MM/YYYY and are stored as YYYY-MM-DD (the days table's date type)
   const showDate = iso => (/^(\d{4})-(\d\d)-(\d\d)$/.exec(iso || '') || []).slice(1).reverse().join('/');
-  function readDate(text) {
-    const [, dd, mm, yyyy] = /^(\d\d)\/(\d\d)\/(\d{4})$/.exec(text) || [];
-    if (!dd) return null;
-    const iso = `${yyyy}-${mm}-${dd}`, t = new Date(iso + 'T00:00:00Z');
-    return !isNaN(t) && t.getUTCDate() === +dd ? iso : null;
-  }
   // Figma 40:592: a handwritten prompt on the left page, a hint along the bottom of the right
   const ROUGH_PROMPTS = {
     l: ['Think out loud here! Half formed ideas, prompts you tried, what worked, what didn’t work', ''],
@@ -751,8 +748,9 @@
     ];
     // day pages and their rough pages share the day's date; back-section rough spreads keep their own
     const dateKey = s.day ? `d${s.day}-date` : `${s.id}-date`;
-    const date = `<label class="page-date"><input ${field(dateKey)} data-date value="${esc(showDate(saved[dateKey]))}" placeholder="DD/MM/YYYY"
-      inputmode="numeric" maxlength="10" aria-label="Date (DD/MM/YYYY)"><img src="assets/date-line.svg" alt="" width="82" height="1.01058"></label>`;
+    // the DD/MM/YYYY text is display only; clicking it opens the browser's date picker underneath
+    const date = `<label class="page-date"><input class="date-shown" value="${esc(showDate(saved[dateKey]))}" placeholder="DD/MM/YYYY" readonly tabindex="-1" aria-hidden="true">
+      <input type="date" class="date-pick" ${field(dateKey)} value="${esc(saved[dateKey])}" aria-label="Date"><img src="assets/date-line.svg" alt="" width="82" height="1.01058"></label>`;
     if (s.kind === 'rough') return ['l', 'r'].map(side => {
       const key = `${s.id}-${side}`;
       const [prompt, hint] = ROUGH_PROMPTS[side];
@@ -762,9 +760,8 @@
     });
     const d = days[s.day];
     const mood = +saved[`d${s.day}-mood`] || 0;
-    // transparent buttons over the five faces in the design's image (centres at 10%, 30% … 90% of its width)
-    const moods = `<div class="mood" data-day="${s.day}" role="group" aria-label="How did today go?"><img src="assets/mood-faces.png" alt="">${
-      MOODS.map((label, i) => `<button class="${mood === i + 1 ? 'on' : ''}" style="left:${10 + i * 19.8}%" data-mood="${i + 1}" aria-label="${label}" aria-pressed="${mood === i + 1}" title="${label}"></button>`).join('')}</div>`;
+    const moods = `<div class="mood" data-day="${s.day}" role="group" aria-label="How did today go?">${
+      MOODS.map(([e, label], i) => `<button class="${mood === i + 1 ? 'on' : ''}" data-mood="${i + 1}" aria-label="${label}" aria-pressed="${mood === i + 1}" title="${label}">${e}</button>`).join('')}</div>`;
     const summaryKey = `d${s.day}-summary`;
     const question = (q, n) => {
       const key = `d${s.day}-q${n}`;
@@ -796,29 +793,29 @@
   document.getElementById('cover').onclick = () => go(0);
   ready.then(() => { document.getElementById('coverInside').innerHTML = pages(sections[0])[0]; });
 
-  // Day tabs unlock one at a time: day n is open only on the n-th day from the participant's start date
-  // (their own local calendar). Intro and the red Rough section are always open. Without a start date
+  // Day tabs unlock one at a time: day n opens on the n-th day from the participant's start date
+  // (their own local calendar) and stays open after that. Intro and the red Rough section are always open. Without a start date
   // (no participant link, or the settings didn't load) every day stays open.
   const DAY_MS = 864e5;
   const shortDate = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   let openDay = null, startISO = null;
-  const isOpen = s => !s.day || s.tab === 6 || openDay === null || s.day === openDay;
+  const isOpen = s => !s.day || s.tab === 6 || openDay === null || s.day <= openDay;
   function unlockFrom(start) {
     startISO = start;
     const t = new Date(), today = Date.UTC(t.getFullYear(), t.getMonth(), t.getDate());
     const n = Math.round((today - Date.parse(start + 'T00:00:00Z')) / DAY_MS) + 1;
-    openDay = n >= 1 && n <= 5 ? n : 0;
+    openDay = Math.max(0, Math.min(5, n)); // days stay open once they've started
     drawLocks();
     if (current >= 0 && !isOpen(sections[current])) go(0);
     else if (current >= 0) drawNav();
   }
   function drawLocks() {
     tabs.querySelectorAll('.tab').forEach((t, i) => {
-      const locked = i >= 1 && i <= 5 && openDay !== null && i !== openDay;
+      const locked = i >= 1 && i <= 5 && openDay !== null && i > openDay;
       t.classList.toggle('locked', locked);
       t.setAttribute('aria-disabled', String(locked));
       const when = startISO && shortDate(new Date(Date.parse(startISO + 'T00:00:00Z') + (i - 1) * DAY_MS).toISOString().slice(0, 10));
-      t.title = !locked ? '' : (openDay === 0 && i < 6 && Date.now() > Date.parse(startISO) ? `Day ${i} was ${when}` : i < openDay ? `Day ${i} has closed` : `Opens ${when}`);
+      t.title = locked ? `Opens ${when}` : '';
     });
   }
   // the nearest open spread in a direction, skipping locked days
@@ -843,21 +840,14 @@
     }
     const k = e.target.dataset.key;
     if (!k) return;
-    if ('date' in e.target.dataset) {
-      // add the slashes while typing, and only save a complete, real date (or an emptied field)
-      const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
-      if (e.inputType?.startsWith('insert')) e.target.value = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4)].filter(Boolean).join('/');
-      const iso = digits ? readDate(e.target.value) : '';
-      if (iso === null) return;
-      saved[k] = iso;
-      persist(k);
-      return;
-    }
+    if (e.target.type === 'date') e.target.parentElement.querySelector('.date-shown').value = showDate(e.target.value);
     saved[k] = e.target.value;
     persist(k);
     if (k === 'name') drawName();
   });
   binder.addEventListener('click', e => {
+    const pick = e.target.closest('.page-date')?.querySelector('.date-pick');
+    if (pick) { e.preventDefault(); try { pick.showPicker(); } catch { pick.focus(); } return; }
     const b = e.target.closest('.mood button');
     if (!b) return;
     const day = b.parentElement.dataset.day, k = `d${day}-mood`;
@@ -1369,7 +1359,7 @@
     { sel: '#tabs', title: 'Welcome to your diary', text: 'These tabs jump between the intro, each of the 5 days, and a spare Rough section at the back.' },
     { sel: '.controls', title: 'Turning pages', text: 'Use the arrows (or ← → on your keyboard) to flip pages. The × next to your name closes the diary.' },
     { sec: 'day', sel: '#left .mood', title: 'How did today go?', text: 'Each day, finish the line “Today my day was …” and tap the face that best matches it. Tap it again to clear it.' },
-    { sec: 'day', sel: '#right .page-date', title: 'Date your entries', text: 'Type the date you’re writing on as DD/MM/YYYY. Hover the day’s title to see that day’s task.' },
+    { sec: 'day', sel: '#right .page-date', title: 'Date your entries', text: 'Click here to pick the date you’re writing on. Hover the day’s title to see that day’s task.' },
     { sec: 'day', sel: '#left .qs', title: 'Answer the questions', text: 'Type straight onto the page. Everything saves automatically as you go.' },
     { sec: 'day', sel: '.page-count', title: 'Pages within a day', text: 'Each day has a question spread followed by rough pages. This shows which page of the day you’re on.' },
     { sec: 'dayr', sel: '#binder', title: 'Rough pages are a canvas', text: 'Jot notes, then drag screenshots, videos, files and notes anywhere, even onto the facing page. Pull an item’s corner to resize it, and ✎ to draw on an image or video.' },
