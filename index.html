@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Diary Study</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;600;700&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;500;600;700&family=Caveat&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #1b1b1b;
@@ -318,7 +318,7 @@
   .diary-head button { width: 40px; height: 40px; border: 0; background: none; cursor: pointer; display: grid; place-items: center;
     filter: drop-shadow(2.5px 2.5px 3.75px rgba(0,0,0,.25)); transition: transform .15s; }
   .diary-head button:hover { transform: scale(1.1); }
-  body.closed .diary-head, body.closed .page-count { opacity: 0; pointer-events: none; }
+  body.closed .diary-head, body.closed .controls { opacity: 0; pointer-events: none; }
 
   /* ---------- annotation editor ---------- */
   .annot { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.7); display: grid; place-items: center; }
@@ -342,12 +342,12 @@
     width: 423px; height: 481px; background: var(--paper); overflow: hidden; }
   .gate-card .lines { position: absolute; left: 0; top: 24px; }
   .gate-card .red { position: absolute; left: 41px; top: -9px; transform-origin: 0 0; transform: rotate(90deg); }
-  .gate-card .hand { position: absolute; font-family: 'Caveat', cursive; font-size: 17px; letter-spacing: -.2px; color: #4b4b4b; white-space: nowrap; }
-  .gate-card .hi { left: calc(50% - 124.5px); top: 56px; line-height: 11px; }
-  .gate-card .faces { position: absolute; left: calc(50% + .5px); top: 91px; transform: translateX(-50%); display: flex; gap: 10px; }
+  .gate-card .hand { position: absolute; color: #4b4b4b; white-space: nowrap; }
+  .gate-card .hi { left: calc(50% - 108.5px); top: 56px; line-height: 11px; font-weight: 500; font-size: 17px; letter-spacing: -1.02px; white-space: pre; }
+  .gate-card .faces { position: absolute; left: calc(50% + 10.5px); top: 91px; transform: translateX(-50%); display: flex; gap: 10px; }
   .gate-card .faces img { display: block; border-radius: 50%; }
-  .gate-card .thanks { left: 50%; top: 220px; transform: translateX(-50%); line-height: 24px; text-align: center; }
-  .gate-card .code { position: absolute; left: 50%; top: 291px; transform: translateX(-50%); display: flex; gap: 9px; }
+  .gate-card .thanks { left: calc(50% + 10.5px); top: 220px; transform: translateX(-50%); font-size: 15px; letter-spacing: -.9px; line-height: 24px; text-align: center; }
+  .gate-card .code { position: absolute; left: calc(50% + 11px); top: 291px; transform: translateX(-50%); display: flex; gap: 9px; }
   .gate-card .code input { width: 49px; height: 65px; background: #fff; border: 2px solid var(--paper); border-radius: 4px; outline: none;
     font: 16px Inter, sans-serif; letter-spacing: -.96px; text-align: center; color: var(--ink); text-transform: uppercase; padding: 0; }
   .gate-card .code input::placeholder { color: rgba(75,75,75,.2); }
@@ -355,7 +355,7 @@
   .gate-card.wrong .code input { border-color: var(--rough); animation: shake .3s; }
   @keyframes shake { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
   .gate-card .err { position: absolute; left: 0; right: 0; top: 361px; text-align: center; font-size: 11px; letter-spacing: -.3px; color: var(--rough); }
-  .gate-card .go { position: absolute; left: 50%; top: 384px; transform: translateX(-50%); width: 107px; height: 42px; border: 0; border-radius: 4px;
+  .gate-card .go { position: absolute; left: calc(50% + 11px); top: 384px; transform: translateX(-50%); width: 107px; height: 42px; border: 0; border-radius: 4px;
     background: #000; color: #fff; font: 14px/24px Inter, sans-serif; cursor: pointer; transition: opacity .15s; }
   .gate-card .go:disabled { opacity: .5; cursor: default; }
 
@@ -366,12 +366,17 @@
     animation: menuIn .25s ease-out; }
   .task-card .lines { position: absolute; left: 0; top: 24px; }
   .task-card .red { position: absolute; left: 41px; top: -9px; transform-origin: 0 0; transform: rotate(90deg); }
-  .task-card .hand { font-family: 'Caveat', cursive; color: #4b4b4b; }
-  .task-card .kicker { position: absolute; left: 0; right: 0; top: 50px; text-align: center; font-size: 17px; line-height: 20px; }
-  .task-card .body { position: absolute; left: 70px; top: 96px; width: 305px; display: flex; flex-direction: column; gap: 19px; text-align: center; line-height: 24px; }
-  .task-card h3 { font-weight: 700; font-size: 22px; letter-spacing: -.3px; }
-  .task-card .body p { font-size: 17px; letter-spacing: -.2px; }
-  .task-card .tip { position: absolute; left: 78px; top: 408px; width: 305px; text-align: center; font-size: 14px; line-height: 24px; letter-spacing: -.84px; color: #4b4b4b; }
+  .task-card .kicker { position: absolute; left: 169px; top: 52px; display: flex; align-items: center; gap: 5px;
+    font-size: 14px; line-height: 11px; letter-spacing: -.84px; color: #4b4b4b; white-space: nowrap; }
+  .task-card .kicker button { width: 16px; height: 16px; border: 0; padding: 0; background: none; cursor: pointer; display: grid; place-items: center; }
+  .task-card .kicker button:disabled { opacity: .25; cursor: default; }
+  .task-card .kicker img { display: block; }
+  .task-card h3 { position: absolute; left: 222.5px; top: 96px; width: 305px; transform: translateX(-50%); text-align: center;
+    font-weight: 700; font-size: 24px; line-height: 24px; letter-spacing: -1.44px; color: #4b4b4b; }
+  .task-card .details { position: absolute; left: 227.5px; top: 146px; width: 315px; transform: translateX(-50%); text-align: center;
+    font-size: 16px; line-height: 24px; letter-spacing: -.96px; color: #4b4b4b; }
+  .task-card .tip { position: absolute; left: 230.5px; top: 408px; width: 305px; transform: translateX(-50%); text-align: center;
+    font-size: 14px; line-height: 24px; letter-spacing: -.84px; color: rgba(75,75,75,.4); }
   .task-card .shut { position: absolute; right: 8px; top: 4px; border: 0; background: none; font-size: 18px; color: #4b4b4b; cursor: pointer; padding: 2px 6px; }
 
   /* ---------- onboarding tour ---------- */
@@ -474,8 +479,12 @@
       <img class="lines" src="assets/lined-paper.svg" alt="" width="481" height="457">
       <img class="red" src="assets/margin-line.svg" alt="" width="498" height="1">
       <button class="shut" id="taskClose" aria-label="Close today’s task">×</button>
-      <p class="hand kicker">Today’s Task</p>
-      <div class="hand body"><h3 id="taskTitle"></h3><p id="taskText"></p></div>
+      <div class="kicker">
+        <button id="taskPrev" aria-label="Previous day’s task"><img src="assets/icon-caret-small-prev.svg" alt="" width="16" height="16" style="transform:rotate(90deg)"></button>
+        <span id="taskLabel">Today’s Task</span>
+        <button id="taskNext" aria-label="Next day’s task"><img src="assets/icon-caret-small-next.svg" alt="" width="16" height="16" style="transform:rotate(-90deg)"></button>
+      </div>
+      <h3 id="taskTitle"></h3><p class="details" id="taskText"></p>
       <p class="tip" id="taskTip"></p>
     </div>
   </div>
@@ -502,7 +511,7 @@
   <form class="gate-card" id="gateForm" role="dialog" aria-labelledby="gateHi" autocomplete="off">
     <img class="lines" src="assets/lined-paper.svg" alt="" width="481" height="457">
     <img class="red" src="assets/margin-line.svg" alt="" width="498" height="1">
-    <p class="hand hi" id="gateHi">Hi! We are Medhavi and Vanshika</p>
+    <p class="hand hi" id="gateHi">Hi 👋  We are Medhavi and Vanshika</p>
     <div class="faces"><img src="assets/researcher-1.png" alt="Medhavi" width="92" height="92"><img src="assets/researcher-2.png" alt="Vanshika" width="92" height="92"></div>
     <div class="hand thanks"><p>Thank you for participating in our study.</p><p>Please enter your access code to get started.</p></div>
     <div class="code" role="group" aria-label="Access code">
@@ -1339,8 +1348,14 @@
   const task = document.getElementById('task');
   const seenKey = day => `diary-task-seen-${TOKEN || 'anon'}-d${day}`;
   const taskSeen = day => { try { return !!localStorage.getItem(seenKey(day)); } catch { return false; } };
+  // the carets step through the tasks of days that have opened so far
+  let taskDay = 0;
+  const lastOpenDay = () => openDay === null ? 5 : openDay;
   function showTask(day) {
-    const d = days[day];
+    const d = days[taskDay = day];
+    document.getElementById('taskLabel').textContent = openDay === null || day === openDay ? 'Today’s Task' : `Day ${day}’s Task`;
+    document.getElementById('taskPrev').disabled = day <= 1;
+    document.getElementById('taskNext').disabled = day >= lastOpenDay();
     document.getElementById('taskTitle').textContent = d.title;
     document.getElementById('taskText').textContent = d.task;
     document.getElementById('taskTip').textContent = d.tip ? `Tip: ${d.tip}` : '';
@@ -1349,7 +1364,11 @@
     document.getElementById('taskClose').focus();
   }
   const hideTask = () => { task.hidden = true; };
-  task.addEventListener('click', e => { if (e.target === task || e.target.id === 'taskClose') hideTask(); });
+  task.addEventListener('click', e => {
+    if (e.target === task || e.target.id === 'taskClose') hideTask();
+    if (e.target.closest('#taskPrev')) showTask(taskDay - 1);
+    if (e.target.closest('#taskNext')) showTask(taskDay + 1);
+  });
   binder.addEventListener('click', e => { const t = e.target.closest('[data-task]'); if (t) showTask(+t.dataset.task); });
 
   // ---------- onboarding tour ----------
