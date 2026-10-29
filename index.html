@@ -54,7 +54,7 @@
   .qs textarea { flex: 1; margin-top: 6px; border: 0; background: transparent; resize: none; outline: none;
     font: 13px/1.5 Inter, sans-serif; color: var(--ink); letter-spacing: -.3px; }
   /* day question pages (Figma 4:92): title + task top-left, then ruled question blocks */
-  .day-title { position: absolute; left: 12px; top: 24px; font-weight: 700; font-size: 16px; letter-spacing: -.96px; color: var(--ink); }
+  .day-title { position: absolute; left: 12px; top: 16px; font-weight: 700; font-size: 16px; letter-spacing: -.96px; color: var(--ink); }
   .day-task { position: absolute; left: 12px; top: 45px; width: 311px; font-size: 12px; letter-spacing: -.72px; color: var(--ink); }
   .qs.day { top: 34px; }
   .page.l .qs.day { top: 126px; }
@@ -72,6 +72,29 @@
   .page.r .grid { left: 24px; }
   .grid textarea { width: 100%; height: 100%; border: 0; background: transparent; resize: none; outline: none; padding: 10px;
     font: 13px/1.5 Inter, sans-serif; color: var(--ink); }
+  .grid textarea::placeholder { color: #9a9b95; }
+  /* a short nudge on what rough pages are for; stays visible once the page fills up */
+  .grid .hint { position: absolute; left: 10px; right: 10px; bottom: 6px; pointer-events: none;
+    font-size: 9px; letter-spacing: -.3px; color: #8d8e88; font-style: italic; }
+
+
+  /* Figma 40:1393: DD/MM/YYYY date over a dotted rule, top-right of each spread's right page */
+  .page-date { position: absolute; left: 339px; top: 11px; width: 82px; display: flex; flex-direction: column; gap: 2px; }
+  .page-date input { width: 100%; border: 0; background: transparent; outline: none; padding: 0;
+    font: 10px Inter, sans-serif; letter-spacing: 1.8px; color: var(--ink); }
+  .page-date input::placeholder { color: #8a8a8a; }
+  .page-date img { display: block; }
+  /* Figma 40:536/537/544: day title, "Today my day was …" line, and the mood faces */
+  .day-summary { position: absolute; left: 12px; top: 37px; width: 311px; height: 52px; border: 0; background: transparent;
+    resize: none; outline: none; font: 12px Inter, sans-serif; letter-spacing: -.72px; color: var(--ink); }
+  .day-summary::placeholder { color: #8a8a8a; }
+  .mood { position: absolute; left: 273px; top: 94px; width: 126px; height: 27px; overflow: hidden; }
+  .mood > img { position: absolute; left: 0; top: 0; width: 100%; height: 117.14%; max-width: none; pointer-events: none; }
+  .mood button { position: absolute; top: 2.5px; width: 23px; height: 23px; margin-left: -11.5px; border-radius: 50%;
+    border: 0; padding: 0; background: none; cursor: pointer; transition: box-shadow .15s, background .15s; }
+  .mood button:hover { background: rgba(0,0,0,.06); }
+  .mood button.on { box-shadow: 0 0 0 1.5px var(--ink) inset; background: rgba(0,0,0,.04); }
+  .turn .mood button, .turn .page-date input, .turn .day-summary { pointer-events: none; }
 
   /* ---------- binder (open spread) ---------- */
   #binder { position: absolute; left: 184px; top: 140px; width: 913px; height: 551px; background: var(--accent);
@@ -202,6 +225,8 @@
   .tab { position: absolute; left: 0; width: 19px; height: 81px; border: 0; cursor: pointer; background: var(--c);
     clip-path: polygon(0 0, 100% 16%, 100% 76%, 0 100%); transition: width .2s; }
   .tab:hover, .tab.on { width: 24px; }
+  .tab.locked { opacity: .35; cursor: not-allowed; }
+  .tab.locked:hover { width: 19px; }
   .tab.on { z-index: 2; }
   .tab span { position: absolute; left: 3px; top: 50%; width: 13px; transform: translateY(-50%) rotate(-90deg);
     display: flex; justify-content: center; white-space: nowrap; }
@@ -213,8 +238,20 @@
   .media { position: absolute; pointer-events: auto; cursor: grab; touch-action: none; }
   .media:active { cursor: grabbing; }
   .media.image { cursor: pointer; }
-  .media img, .media video { display: block; width: 100%; height: auto; max-height: 300px; object-fit: cover; user-select: none; -webkit-user-drag: none; }
+  .media img, .media video { display: block; width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
   .media.image, .media.video { box-shadow: 1px 2px 6px rgba(0,0,0,.15); }
+  .media .ann-ov { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .media.text { background: #fff6b8; box-shadow: 1px 2px 6px rgba(0,0,0,.15); display: flex; flex-direction: column; cursor: default; }
+  .media.text .grip { height: 12px; flex: none; cursor: grab; background: rgba(0,0,0,.05); }
+  .media.text textarea { flex: 1; border: 0; background: transparent; resize: none; outline: none; padding: 4px 8px 8px;
+    font: 12px/1.4 Inter, sans-serif; color: var(--ink); letter-spacing: -.3px; }
+  .media .rz { position: absolute; right: -5px; bottom: -5px; width: 12px; height: 12px; border-radius: 2px; cursor: nwse-resize;
+    background: var(--paper); border: 1.5px solid var(--bg); opacity: 0; transition: opacity .15s; }
+  .media .ann-btn { position: absolute; top: -8px; left: -8px; width: 20px; height: 20px; border-radius: 50%; border: 0;
+    background: var(--bg); color: var(--paper); font-size: 11px; line-height: 20px; cursor: pointer; opacity: 0; transition: opacity .15s; }
+  .media:hover .rz, .media:hover .ann-btn, .media .ann-btn:focus-visible { opacity: 1; }
+  .media.lifted { z-index: 50 !important; cursor: grabbing; box-shadow: 4px 8px 18px rgba(0,0,0,.3); }
+  .turn .ann-btn, .turn .rz { display: none; }
   .file-chip { display: flex; align-items: center; gap: 6px; padding: 7px 10px; background: var(--paper); border: 1px solid #cfd0cb;
     font: 11px Inter, sans-serif; color: var(--ink); text-decoration: none; letter-spacing: -.3px; max-width: 300px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -232,7 +269,7 @@
   .fab img { transition: transform .2s; }
   .fab[aria-expanded="true"] img { transform: rotate(45deg); }
   .fab:hover { transform: scale(1.06); }
-  .fab-menu { left: 826px; top: 305px; width: 46px; padding: 18px 0; display: flex; flex-direction: column; gap: 18px;
+  .fab-menu { left: 826px; top: 205px; width: 46px; padding: 18px 0; display: flex; flex-direction: column; gap: 18px;
     transform-origin: 50% 100%; animation: menuIn .18s ease-out; }
   @keyframes menuIn { from { opacity: 0; transform: translateY(8px) scale(.95); } }
   .fab-menu button { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 0; background: none;
@@ -241,10 +278,11 @@
   #binder:not(.can-add) .fab, #binder:not(.can-add) .fab-menu { display: none; }
 
   /* ---------- contact ---------- */
-  .contact { position: fixed; z-index: 20; right: calc(20px + env(safe-area-inset-right, 0px));
-    bottom: calc(20px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
-  .contact-btn { width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--paper); color: var(--bg);
-    display: grid; place-items: center; cursor: pointer; box-shadow: 2.5px 2.5px 7.5px rgba(0,0,0,.35); transition: transform .15s; }
+  /* Figma 40:1161: help and contact buttons in the frame's bottom-right corner; the card opens above them */
+  .contact { position: absolute; z-index: 20; left: 1211px; top: 697px; width: 40px; display: flex; flex-direction: column; gap: 20px; }
+  .contact-card { position: absolute; right: 0; bottom: calc(100% + 12px); }
+  .contact-btn { width: 40px; height: 40px; border-radius: 43.75px; border: 0; background: var(--paper);
+    display: grid; place-items: center; cursor: pointer; box-shadow: 2.5px 2.5px 7.5px rgba(0,0,0,.25); transition: transform .15s; }
   .contact-btn:hover { transform: scale(1.08); }
   .contact-btn:focus-visible, .contact-send:focus-visible { outline: 2px solid var(--intro); outline-offset: 2px; }
   .contact-card { width: 248px; background: var(--paper); color: var(--ink); padding: 16px 16px 14px;
@@ -258,11 +296,48 @@
   .contact-send:hover { opacity: .85; }
 
   /* ---------- controls ---------- */
-  .controls { position: absolute; left: 50%; top: 722px; transform: translateX(-50%); display: flex; gap: 22px; z-index: 6; }
-  .controls button { width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--paper); color: var(--ink);
-    font-size: 20px; cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,.35); transition: transform .15s, opacity .2s; }
-  .controls button:hover:not(:disabled) { transform: scale(1.1); }
+  /* Figma 40:1153: ‹ Page n of m › under the binder */
+  .controls { position: absolute; left: calc(50% + .5px); top: 707px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; z-index: 6; }
+  .controls button { width: 40px; height: 40px; border-radius: 43.75px; border: 0; background: var(--paper); cursor: pointer;
+    display: grid; place-items: center; box-shadow: 2.5px 2.5px 7.5px rgba(0,0,0,.25); transition: transform .15s, opacity .2s; }
+  .controls button:hover:not(:disabled) { transform: scale(1.08); }
   .controls button:disabled { opacity: .3; cursor: default; }
+  #prev img { transform: rotate(90deg); }
+  #next img { transform: rotate(-90deg); }
+  .page-count { font-size: 16px; letter-spacing: -.96px; color: var(--paper); white-space: nowrap; min-width: 82px; text-align: center; }
+
+  /* Figma 40:1171: "<name>’s Diary ×" above the binder */
+  .diary-head { position: absolute; left: 50%; top: 70px; transform: translateX(-50%); display: flex; align-items: flex-end; z-index: 6; transition: opacity .3s; }
+  .diary-head h1 { font-weight: 400; font-size: 32px; letter-spacing: -1.92px; color: var(--paper); white-space: nowrap; }
+  .diary-head button { width: 40px; height: 40px; border: 0; background: none; cursor: pointer; display: grid; place-items: center;
+    filter: drop-shadow(2.5px 2.5px 3.75px rgba(0,0,0,.25)); transition: transform .15s; }
+  .diary-head button:hover { transform: scale(1.1); }
+  body.closed .diary-head, body.closed .page-count { opacity: 0; pointer-events: none; }
+
+  /* ---------- annotation editor ---------- */
+  .annot { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.7); display: grid; place-items: center; }
+  .annot-card { background: var(--paper); padding: 14px; box-shadow: 0 10px 40px rgba(0,0,0,.5); display: flex; flex-direction: column; gap: 10px; }
+  .annot-stage { position: relative; line-height: 0; }
+  .annot-stage img, .annot-stage video { display: block; max-width: 80vw; max-height: 68vh; }
+  .annot-stage canvas { position: absolute; left: 0; top: 0; cursor: crosshair; touch-action: none; }
+  .annot-bar { display: flex; align-items: center; gap: 8px; font: 12px Inter, sans-serif; }
+  .annot-bar .sw { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; background: var(--c); }
+  .annot-bar .sw.on { border-color: var(--bg); box-shadow: 0 0 0 2px var(--paper) inset; }
+  .annot-bar .tool { border: 1px solid #cfd0cb; background: #fff; padding: 5px 10px; cursor: pointer; font: inherit; }
+  .annot-bar .tool.on { background: var(--bg); color: var(--paper); }
+  .annot-bar .grow { flex: 1; }
+  .annot-bar .save { background: var(--bg); color: var(--paper); border-color: var(--bg); }
+
+  /* ---------- onboarding tour ---------- */
+  .tour { position: fixed; inset: 0; z-index: 30; }
+  .tour-spot { position: fixed; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,.6); transition: all .3s ease; pointer-events: none; }
+  .tour-card { position: fixed; width: 280px; background: var(--paper); color: var(--ink); padding: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.4);
+    font-size: 13px; line-height: 1.45; letter-spacing: -.3px; transition: left .3s ease, top .3s ease; }
+  .tour-card h3 { font-size: 15px; letter-spacing: -.6px; margin-bottom: 4px; }
+  .tour-card .row { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+  .tour-card .count { font: 10px 'Fira Code', monospace; opacity: .6; flex: 1; }
+  .tour-card button { border: 0; padding: 7px 12px; cursor: pointer; font: 12px Inter, sans-serif; background: none; color: var(--ink); }
+  .tour-card button.primary { background: var(--bg); color: var(--paper); }
 
   /* ---------- page-turn ---------- */
   .turn { position: absolute; top: 152px; width: 432px; height: 527px; z-index: 5; pointer-events: none;
@@ -324,6 +399,8 @@
       <button data-pick="image"><img src="assets/icon-image.svg" alt="" width="16" height="16">Image</button>
       <button data-pick="file"><img src="assets/icon-file.svg" alt="" width="16" height="16">File</button>
       <button data-pick="video"><img src="assets/icon-video.svg" alt="" width="15" height="15">Video</button>
+      <button data-pick="text"><b style="font-size:15px;line-height:16px">T</b>Note</button>
+      <button data-pick="page"><b style="font-size:15px;line-height:16px">⊞</b>Page</button>
     </div>
     <button class="fab" id="fab" aria-label="Add media" aria-expanded="false"><img src="assets/icon-plus.svg" alt="" width="24" height="24"></button>
     <input type="file" id="pick-image" accept="image/*" multiple hidden>
@@ -334,29 +411,61 @@
 
   <div id="tabs"></div>
 
+  <div class="diary-head">
+    <h1 id="diaryName">Your Diary</h1>
+    <button id="close" aria-label="Close diary"><img src="assets/icon-close.svg" alt="" width="24" height="24"></button>
+  </div>
+
   <div class="controls">
-    <button id="prev" aria-label="Previous page">‹</button>
-    <button id="close" aria-label="Close diary">✕</button>
-    <button id="next" aria-label="Next page">›</button>
+    <button id="prev" aria-label="Previous page"><img src="assets/icon-caret-prev.svg" alt="" width="24" height="24"></button>
+    <p class="page-count" id="pageCount" aria-live="polite"></p>
+    <button id="next" aria-label="Next page"><img src="assets/icon-caret-next.svg" alt="" width="24" height="24"></button>
+  </div>
+
+
+  <!-- Contact the researchers -->
+  <div class="contact">
+    <div class="contact-card" id="contactCard" role="dialog" aria-labelledby="contactTitle" hidden>
+      <p class="contact-title" id="contactTitle">Have a question?</p>
+      <p>Please contact your researchers here:</p>
+      <ul>
+        <li>vkumar438@gatech.edu</li>
+        <li>msabherwal3@gatech.edu</li>
+      </ul>
+      <a class="contact-send" href="mailto:vkumar438@gatech.edu,msabherwal3@gatech.edu?subject=Diary%20study%20question">Send email</a>
+    </div>
+    <button class="contact-btn" id="helpBtn" aria-label="How to use the diary" title="How to use the diary"><img src="assets/icon-question.svg" alt="" width="24" height="24"></button>
+    <button class="contact-btn" id="contactBtn" aria-label="Contact the researchers" aria-expanded="false">
+      <img src="assets/icon-envelope.svg" alt="" width="24" height="24">
+    </button>
   </div>
 </div>
 
-<!-- Contact the researchers: sits in the window corner, outside the scaled diary -->
-<div class="contact">
-  <div class="contact-card" id="contactCard" role="dialog" aria-labelledby="contactTitle" hidden>
-    <p class="contact-title" id="contactTitle">Have a question?</p>
-    <p>Please contact your researchers here:</p>
-    <ul>
-      <li>vkumar438@gatech.edu</li>
-      <li>msabherwal3@gatech.edu</li>
-    </ul>
-    <a class="contact-send" href="mailto:vkumar438@gatech.edu,msabherwal3@gatech.edu?subject=Diary%20study%20question">Send email</a>
+<div class="annot" id="annot" role="dialog" aria-label="Draw on this item" hidden>
+  <div class="annot-card">
+    <div class="annot-stage" id="annotStage"></div>
+    <div class="annot-bar">
+      <button class="sw on" style="--c:#d1233d" data-color="#d1233d" aria-label="Red pen"></button>
+      <button class="sw" style="--c:#212121" data-color="#212121" aria-label="Black pen"></button>
+      <button class="sw" style="--c:#2f6fd6" data-color="#2f6fd6" aria-label="Blue pen"></button>
+      <button class="sw" style="--c:#f2c200" data-color="#f2c200" aria-label="Yellow pen"></button>
+      <button class="tool" data-tool="erase">Eraser</button>
+      <button class="tool" data-act="undo">Undo</button>
+      <button class="tool" data-act="clear">Clear</button>
+      <span class="grow"></span>
+      <button class="tool" data-act="cancel">Cancel</button>
+      <button class="tool save" data-act="save">Save</button>
+    </div>
   </div>
-  <button class="contact-btn" id="contactBtn" aria-label="Contact the researchers" aria-expanded="false">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true">
-      <rect x="3" y="5.5" width="18" height="13" rx="1.5"/><path d="M3.5 6.5 12 13l8.5-6.5"/>
-    </svg>
-  </button>
+</div>
+
+<div class="tour" id="tour" role="dialog" aria-labelledby="tourTitle" hidden>
+  <div class="tour-spot" id="tourSpot"></div>
+  <div class="tour-card" id="tourCard">
+    <h3 id="tourTitle"></h3><p id="tourText"></p>
+    <div class="row"><span class="count" id="tourCount"></span>
+      <button data-t="skip">Skip</button><button data-t="back">Back</button><button class="primary" data-t="next">Next</button></div>
+  </div>
 </div>
 
 <script>
@@ -369,19 +478,23 @@
     { label: '05', color: 'var(--d5)' },
     { label: 'Rough', color: 'var(--rough)' },
   ];
-  // Every spread in reading order; each day is a questions spread followed by its own rough spreads
-  const ROUGH_SPREADS = 1;
-  const sections = [
-    { id: 'intro', kind: 'intro', tab: 0 },
-    ...[1, 2, 3, 4, 5].flatMap(day => [
-      { id: 'd' + day, kind: 'day', day, tab: day },
-      ...Array.from({ length: ROUGH_SPREADS }, (_, i) =>
-        ({ id: `d${day}r${i ? i + 1 : ''}`, kind: 'rough', day, tab: day })),
-    ]),
-    // the red Rough section at the back: 5 spreads (rough, rough2 … rough5)
-    ...Array.from({ length: 5 }, (_, i) => ({ id: `rough${i ? i + 1 : ''}`, kind: 'rough', tab: 6 })),
-  ];
-  sections.forEach(s => s.color = tabList[s.tab].color);
+  // Every spread in reading order; each day is a questions spread followed by its own rough spreads.
+  // Participants can add rough spreads; the count per day is saved as d<day>-rough-pages (rough-pages at the back).
+  const roughCount = (key, min) => Math.max(min, +saved[key] || 0);
+  let sections = [];
+  function buildSections() {
+    sections = [
+      { id: 'intro', kind: 'intro', tab: 0 },
+      ...[1, 2, 3, 4, 5].flatMap(day => [
+        { id: 'd' + day, kind: 'day', day, tab: day },
+        ...Array.from({ length: roughCount(`d${day}-rough-pages`, 1) }, (_, i) =>
+          ({ id: `d${day}r${i ? i + 1 : ''}`, kind: 'rough', day, tab: day })),
+      ]),
+      // the red Rough section at the back: at least 5 spreads (rough, rough2 … rough5)
+      ...Array.from({ length: roughCount('rough-pages', 5) }, (_, i) => ({ id: `rough${i ? i + 1 : ''}`, kind: 'rough', tab: 6 })),
+    ];
+    sections.forEach(s => s.color = tabList[s.tab].color);
+  }
 
   // Each day: a title and task on the left page's first block, then five questions (keys d<day>-q<n>)
   const SHARE_TASK = 'During your normal work, identify one AI workflow, prompt pattern, technique, or approach that another designer could potentially reuse or adapt. It should be specific enough to understand but broad enough to apply in another context.';
@@ -422,8 +535,8 @@
   // Storage: Supabase. Each participant opens their own link, ?t=<token>, and the
   // database functions only accept that token. Without a token or a connection,
   // answers are kept in this browser's localStorage instead.
-  const SUPA_URL = 'https://uyvcbowaghqnlmrfuece.supabase.co';
-  const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5dmNib3dhZ2hxbmxtcmZ1ZWNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI5NTM3ODIsImV4cCI6MjEwODUyOTc4Mn0.FqqnzGzIgOuwKCQOL9NjLU__6tkbgPky3h9K2Zbg5jQ';
+  const SUPA_URL = 'https://hekiwayvwkjgqrgfeull.supabase.co';
+  const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhla2l3YXl2d2tqZ3FyZ2ZldWxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyMjExNTQsImV4cCI6MjEwODc5NzE1NH0.6IoaLRcHQYXXxsX7IeDrGceFmNICTnhxCoDtdm2Fi_I';
   const TOKEN = new URLSearchParams(location.search).get('t');
   const AUTH = { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` };
 
@@ -449,36 +562,63 @@
       .then(rows => {
         document.body.classList.toggle('no-ms', !!rows?.[0]?.hide_microsoft_logo);
         if (rows?.[0]?.partner_logo) document.body.classList.add(`logo-${rows[0].partner_logo}`);
-        if (rows?.[0]?.study_dates) document.getElementById('studyDates').textContent = `[ ${rows[0].study_dates} ]`;
+        const { start_date: start, end_date: end } = rows?.[0] || {};
+        if (start && end) document.getElementById('studyDates').textContent = `[ ${shortDate(start)} - ${shortDate(end)} ]`;
+        if (start) unlockFrom(start);
       })
       .catch(e => console.warn('could not load settings', e))
       .finally(() => document.body.classList.remove('ms-pending'));
   }
 
+  // The questions table holds each day's instruction and questions for everyone; the copy above is the
+  // fallback when it can't be reached
+  const questionsLoaded = fetch(`${SUPA_URL}/rest/v1/rpc/load_questions`, { method: 'POST', headers: { ...AUTH, 'Content-Type': 'application/json' }, body: '{}' })
+    .then(res => res.ok ? res.json() : Promise.reject(new Error(`load_questions ${res.status}`)))
+    .then(rows => {
+      // d<n>-i1 is the day's instruction title, d<n>-i2 its details, d<n>-q1…q5 its questions
+      const text = Object.fromEntries(rows.map(r => [r.key, r.prompt]));
+      for (let day = 1; day <= 5; day++) {
+        const questions = [1, 2, 3, 4, 5].map(n => text[`d${day}-q${n}`]);
+        if (questions.every(Boolean)) days[day] = { title: text[`d${day}-i1`] || days[day].title,
+          task: text[`d${day}-i2`] || days[day].task, questions };
+      }
+    })
+    .catch(e => console.warn('could not load questions, using built-in copy', e));
+
   const ready = (async () => {
+    await questionsLoaded;
     if (TOKEN) {
       try {
-        const [name, rows] = await Promise.all([rpc('load_my_name', {}), rpc('load_my_answers', {})]);
+        const [name, rows, dayRows] = await Promise.all([rpc('load_my_name', {}), rpc('load_my_answers', {}), rpc('load_my_days', {})]);
         saved.name = name ?? '';
         rows.forEach(r => { saved[r.question_key] = r.answer; });
+        dayRows.forEach(r => {
+          if (r.entry_date) saved[`d${r.day}-date`] = r.entry_date;
+          if (r.mood) saved[`d${r.day}-mood`] = String(r.mood);
+        });
         online = true;
         return;
       } catch (e) { console.warn('could not load saved answers, using local copy', e); }
     }
     try { saved = JSON.parse(localStorage.getItem('diary-study-' + (TOKEN || 'anon')) || '{}'); } catch {}
-  })();
+  })().then(buildSections);
+  buildSections();
 
   // Each change is sent 800 ms after the last keystroke. Pending changes are sent
   // when the page is hidden, so closing the tab right after typing doesn't lose them.
   const timers = {};
+  // A day's date and mood live together in the days table, so both go up under one '#day<n>' key
   function send(key, keepalive = false) {
-    const call = key === 'name'
-      ? rpc('save_name', { p_name: saved.name ?? '' }, keepalive)
+    const day = /^#day(\d)$/.exec(key)?.[1];
+    const call = key === 'name' ? rpc('save_name', { p_name: saved.name ?? '' }, keepalive)
+      : day ? rpc('save_day', { p_day: +day, p_date: saved[`d${day}-date`] || null, p_mood: +saved[`d${day}-mood`] || null }, keepalive)
       : rpc('save_response', { p_key: key, p_answer: saved[key] ?? '' }, keepalive);
     return call.catch(e => { console.warn('save failed, keeping a local copy', e); local(); });
   }
   function persist(key) {
     if (!online) return local();
+    const day = /^d(\d)-(date|mood)$/.exec(key)?.[1];
+    if (day) key = '#day' + day;
     clearTimeout(timers[key]);
     timers[key] = setTimeout(() => { delete timers[key]; send(key); }, 800);
   }
@@ -499,6 +639,22 @@
     ['st-show', 'sticker-show.png', "Show, don't just tell. Feel free to add screenshots, prompts, links, or short recordings."],
     ['st-mess', 'sticker-mess.png', "Make a mess! There's a rough work section where you can jot down ideas or brainstorm."],
   ];
+  const MOODS = ['Rough day', 'Not great', 'Okay', 'Good', 'Great day'];
+  const DAY_WORDS = ['', 'one', 'two', 'three', 'four', 'five'];
+  // dates are typed DD/MM/YYYY and stored as YYYY-MM-DD (the days table's date type)
+  const showDate = iso => (/^(\d{4})-(\d\d)-(\d\d)$/.exec(iso || '') || []).slice(1).reverse().join('/');
+  function readDate(text) {
+    const [, dd, mm, yyyy] = /^(\d\d)\/(\d\d)\/(\d{4})$/.exec(text) || [];
+    if (!dd) return null;
+    const iso = `${yyyy}-${mm}-${dd}`, t = new Date(iso + 'T00:00:00Z');
+    return !isNaN(t) && t.getUTCDate() === +dd ? iso : null;
+  }
+  const ROUGH_PROMPTS = {
+    l: ['Think out loud here: half-formed ideas, prompts you tried, what worked, what didn’t, and anything that surprised you…',
+        'Messy is welcome. Notes, sketches, failed attempts, questions for your partner.'],
+    r: ['Drop in screenshots, recordings, files or notes with the + button. Drag them anywhere, even across pages…',
+        'Tip: drag the corner to resize, ✎ to draw on an image or video.'],
+  };
   const frame = (side, inner) =>
     `<div class="page ${side}"><div class="holes"></div><div class="margin"></div>${inner}</div>`;
 
@@ -518,23 +674,33 @@
          <input ${field('name')} value="${esc(saved.name)}" aria-label="Your name"></div>
          <img class="ms-logo" src="assets/microsoft.png" alt="Microsoft">`),
     ];
+    // day pages and their rough pages share the day's date; back-section rough spreads keep their own
+    const dateKey = s.day ? `d${s.day}-date` : `${s.id}-date`;
+    const date = `<label class="page-date"><input ${field(dateKey)} data-date value="${esc(showDate(saved[dateKey]))}" placeholder="DD/MM/YYYY"
+      inputmode="numeric" maxlength="10" aria-label="Date (DD/MM/YYYY)"><img src="assets/date-line.svg" alt="" width="82" height="1.01058"></label>`;
     if (s.kind === 'rough') return ['l', 'r'].map(side => {
       const key = `${s.id}-${side}`;
-      return frame(side, `<p class="mono label">[ Rough Work ]</p>
-       <div class="grid" data-media="${key}"><textarea ${field(key)} aria-label="Rough work">${esc(saved[key])}</textarea>
-         <div class="media-layer"></div></div>`);
+      const [prompt, hint] = ROUGH_PROMPTS[side];
+      return frame(side, `${side === 'l' ? '<p class="mono label">[ Rough Work ]</p>' : date}
+       <div class="grid" data-media="${key}"><textarea ${field(key)} aria-label="Rough work" placeholder="${esc(prompt)}">${esc(saved[key])}</textarea>
+         <p class="hint">${hint}</p><div class="media-layer"></div></div>`);
     });
-    const day = String(s.day).padStart(2, '0');
     const d = days[s.day];
+    const mood = +saved[`d${s.day}-mood`] || 0;
+    // transparent buttons over the five faces in the design's image (centres at 10%, 30% … 90% of its width)
+    const moods = `<div class="mood" data-day="${s.day}" role="group" aria-label="How did today go?"><img src="assets/mood-faces.png" alt="">${
+      MOODS.map((label, i) => `<button class="${mood === i + 1 ? 'on' : ''}" style="left:${10 + i * 19.8}%" data-mood="${i + 1}" aria-label="${label}" aria-pressed="${mood === i + 1}" title="${label}"></button>`).join('')}</div>`;
+    const summaryKey = `d${s.day}-summary`;
     const question = (q, n) => {
       const key = `d${s.day}-q${n}`;
       return `<section><p class="q">${n}. ${q}</p>
         <textarea ${field(key)} aria-label="${esc(q)}">${esc(saved[key])}</textarea></section>`;
     };
     return [
-      frame('l', `<h2 class="day-title">${d.title}</h2><p class="day-task">${d.task}</p>
+      frame('l', `<h2 class="day-title" title="${esc(`${d.title}: ${d.task}`)}">Day ${DAY_WORDS[s.day]}</h2>
+        <textarea class="day-summary" ${field(summaryKey)} placeholder="Today my day was ..." aria-label="How was your day?">${esc(saved[summaryKey])}</textarea>${moods}
         <div class="qs day">${d.questions.slice(0, 2).map((q, i) => question(q, i + 1)).join('')}</div>`),
-      frame('r', `<p class="mono label">[ Day ${day} ]</p>
+      frame('r', `${date}
         <div class="qs day">${d.questions.slice(2).map((q, i) => question(q, i + 3)).join('')}</div>`),
     ];
   }
@@ -555,15 +721,78 @@
   document.getElementById('cover').onclick = () => go(0);
   ready.then(() => { document.getElementById('coverInside').innerHTML = pages(sections[0])[0]; });
 
+  // Day tabs unlock one at a time: day n is open only on the n-th day from the participant's start date
+  // (their own local calendar). Intro and the red Rough section are always open. Without a start date
+  // (no participant link, or the settings didn't load) every day stays open.
+  const DAY_MS = 864e5;
+  const shortDate = iso => new Date(iso + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  let openDay = null, startISO = null;
+  const isOpen = s => !s.day || s.tab === 6 || openDay === null || s.day === openDay;
+  function unlockFrom(start) {
+    startISO = start;
+    const t = new Date(), today = Date.UTC(t.getFullYear(), t.getMonth(), t.getDate());
+    const n = Math.round((today - Date.parse(start + 'T00:00:00Z')) / DAY_MS) + 1;
+    openDay = n >= 1 && n <= 5 ? n : 0;
+    drawLocks();
+    if (current >= 0 && !isOpen(sections[current])) go(0);
+    else if (current >= 0) drawNav();
+  }
+  function drawLocks() {
+    tabs.querySelectorAll('.tab').forEach((t, i) => {
+      const locked = i >= 1 && i <= 5 && openDay !== null && i !== openDay;
+      t.classList.toggle('locked', locked);
+      t.setAttribute('aria-disabled', String(locked));
+      const when = startISO && shortDate(new Date(Date.parse(startISO + 'T00:00:00Z') + (i - 1) * DAY_MS).toISOString().slice(0, 10));
+      t.title = !locked ? '' : (openDay === 0 && i < 6 && Date.now() > Date.parse(startISO) ? `Day ${i} was ${when}` : i < openDay ? `Day ${i} has closed` : `Opens ${when}`);
+    });
+  }
+  // the nearest open spread in a direction, skipping locked days
+  const step = dir => { for (let i = current + dir; i >= 0 && i < sections.length; i += dir) if (isOpen(sections[i])) return i; return -1; };
+  function drawNav() {
+    prevBtn.disabled = current < 0;
+    nextBtn.disabled = current >= 0 && step(1) < 0;
+  }
+
   const [prevBtn, closeBtn, nextBtn] = ['prev', 'close', 'next'].map(id => document.getElementById(id));
-  prevBtn.onclick = () => go(current - 1);
+  prevBtn.onclick = () => { const i = step(-1); go(i < 0 ? 0 : i); };
   closeBtn.onclick = () => go(-1);
-  nextBtn.onclick = () => go(current + 1);
+  nextBtn.onclick = () => { const i = step(1); if (i >= 0) go(i); };
   prevBtn.disabled = closeBtn.disabled = true;
 
   binder.addEventListener('input', e => {
+    const item = e.target.dataset.item;
+    if (item) {
+      const m = media.find(m => m.id === item);
+      if (m) { m.content.text = e.target.value; saveItem(m); }
+      return;
+    }
     const k = e.target.dataset.key;
-    if (k) { saved[k] = e.target.value; persist(k); }
+    if (!k) return;
+    if ('date' in e.target.dataset) {
+      // add the slashes while typing, and only save a complete, real date (or an emptied field)
+      const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+      if (e.inputType?.startsWith('insert')) e.target.value = [digits.slice(0, 2), digits.slice(2, 4), digits.slice(4)].filter(Boolean).join('/');
+      const iso = digits ? readDate(e.target.value) : '';
+      if (iso === null) return;
+      saved[k] = iso;
+      persist(k);
+      return;
+    }
+    saved[k] = e.target.value;
+    persist(k);
+    if (k === 'name') drawName();
+  });
+  binder.addEventListener('click', e => {
+    const b = e.target.closest('.mood button');
+    if (!b) return;
+    const day = b.parentElement.dataset.day, k = `d${day}-mood`;
+    saved[k] = saved[k] === b.dataset.mood ? '' : b.dataset.mood; // tapping the chosen face again clears it
+    persist(k);
+    b.parentElement.querySelectorAll('button').forEach(x => {
+      const on = x.dataset.mood === saved[k];
+      x.classList.toggle('on', on);
+      x.setAttribute('aria-pressed', String(on));
+    });
   });
 
   // Paper sound: only seconds 0.5–1.5 of the clip, with a short fade so it doesn't click off
@@ -608,7 +837,7 @@
 
   async function go(n) {
     n = Math.max(-1, Math.min(sections.length - 1, n));
-    if (n === current) return;
+    if (n === current || (n >= 0 && !isOpen(sections[n]))) return;
     finishTurn?.(); // a quick second click snaps the previous turn into place
     const prev = current;
     current = n;
@@ -617,8 +846,8 @@
     if (n >= 0) document.body.classList.add('was-open'); // so the close animation never plays on first load
     tabs.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('on', n >= 0 && i === sections[n].tab));
     closeMenu();
-    prevBtn.disabled = closeBtn.disabled = n < 0;
-    nextBtn.disabled = n === sections.length - 1;
+    closeBtn.disabled = n < 0;
+    drawNav();
     if (n < 0) return;
     await ready; // saved answers must be loaded before the pages are drawn
     if (current !== n) return; // another click moved on while we waited
@@ -629,12 +858,38 @@
     else { [left.innerHTML, right.innerHTML] = [l, r]; fillMedia(); }
     clip.style.display = s.id === 'intro' ? '' : 'none';
     binder.classList.toggle('can-add', s.kind !== 'intro');
+    drawPager();
   }
 
-  // ---------- media ----------
-  // With a participant link, files go to the private 'diary-media' bucket under <token>/ and their
-  // placement to the media table. Without one, they stay in this browser's IndexedDB.
-  let media = []; // { id, key, kind, name, path, blob, url, x, y, w }
+  // "Page n of m" counts the spreads inside the current tab, e.g. a day's questions and its rough pages
+  const pageCount = document.getElementById('pageCount');
+  function drawPager() {
+    const s = sections[current];
+    const group = s ? sections.filter(x => x.tab === s.tab) : [];
+    pageCount.textContent = s ? `Page ${group.indexOf(s) + 1} of ${group.length}` : '';
+  }
+  const diaryName = document.getElementById('diaryName');
+  const drawName = () => { const n = (saved.name || '').trim(); diaryName.textContent = n ? `${n}’s Diary` : 'Your Diary'; };
+  ready.then(drawName);
+
+  // Adds a rough spread at the end of the current day (or of the back Rough section) and opens it
+  function addRoughPage() {
+    const s = sections[current];
+    const key = s.tab === 6 ? 'rough-pages' : `d${s.day}-rough-pages`;
+    saved[key] = String(sections.filter(x => x.tab === s.tab && x.kind === 'rough').length + 1);
+    persist(key);
+    buildSections();
+    const last = sections.map(x => x.tab).lastIndexOf(s.tab);
+    go(last);
+  }
+
+  // ---------- rough-page canvas ----------
+  // Images, videos, files and text notes sit on the rough pages. Each can be dragged anywhere, including
+  // onto the facing page, resized from its corner, and images/videos can be drawn on.
+  // With a participant link, files go to the private 'diary-media' bucket under <token>/ and each item's
+  // placement to canvas_items. Without one, everything stays in this browser's IndexedDB.
+  let media = []; // { id, page ('d1r-l'), kind, content: { name, text, ann }, path, blob, url, x, y, w, h, z }
+  let topZ = 0;
   const dbReady = new Promise(res => {
     try {
       const r = indexedDB.open('diary-study', 1);
@@ -653,81 +908,135 @@
     });
   };
   const objectURL = path => `${SUPA_URL}/storage/v1/object/diary-media/${path.split('/').map(encodeURIComponent).join('/')}`;
+  const pageOf = (key, side) => `${key}-${side === 'left' ? 'l' : 'r'}`;
+  const local1 = m => { const { url, ...rest } = m; return store('readwrite', s => s.put(rest)); };
 
   const mediaStore = {
     async load() {
-      if (!online) return ((await store('readonly', s => s.getAll())) || []);
-      const rows = await rpc('load_my_media', {});
+      if (!online) return ((await store('readonly', s => s.getAll())) || []).map(r => ({
+        // items saved before the canvas had a different shape
+        ...r, page: r.page || r.key, kind: r.kind === 'file' ? 'document' : r.kind,
+        content: r.content || { name: r.name }, h: r.h ?? 120, z: r.z ?? 0,
+      }));
+      const rows = await rpc('load_my_items', {});
       return Promise.all(rows.map(async r => {
-        const res = await fetch(objectURL(r.path), { headers: AUTH });
-        return { id: r.id, key: r.page_key, kind: r.kind, name: r.name, path: r.path, x: r.x, y: r.y, w: r.w,
-                 blob: res.ok ? await res.blob() : new Blob() };
+        let blob = null;
+        if (r.storage_path) {
+          const res = await fetch(objectURL(r.storage_path), { headers: AUTH });
+          blob = res.ok ? await res.blob() : new Blob();
+        }
+        let content = {};
+        try { content = JSON.parse(r.content || '{}'); } catch {}
+        return { id: r.id, page: pageOf(r.question_key, r.side), kind: r.kind, content, path: r.storage_path,
+                 x: r.x, y: r.y, w: r.w, h: r.h, z: r.z_index, blob };
       }));
     },
     async add(m) {
-      if (!online) { const { url, ...rest } = m; return store('readwrite', s => s.put(rest)); }
-      m.path = `${TOKEN}/${m.id}-${m.name.replace(/[^\w.-]+/g, '_').slice(-120)}`;
-      const up = await fetch(objectURL(m.path), { method: 'POST', body: m.blob,
-        headers: { ...AUTH, 'Content-Type': m.blob.type || 'application/octet-stream' } });
-      if (!up.ok) throw new Error(`upload ${up.status}: ${await up.text()}`);
-      await rpc('add_media', { p_id: m.id, p_key: m.key, p_kind: m.kind, p_name: m.name, p_path: m.path,
-        p_mime: m.blob.type || null, p_size: m.blob.size, p_x: m.x, p_y: m.y, p_w: m.w });
+      if (online && m.blob) {
+        m.path = `${TOKEN}/${m.id}-${m.content.name.replace(/[^\w.-]+/g, '_').slice(-120)}`;
+        const up = await fetch(objectURL(m.path), { method: 'POST', body: m.blob,
+          headers: { ...AUTH, 'Content-Type': m.blob.type || 'application/octet-stream' } });
+        if (!up.ok) throw new Error(`upload ${up.status}: ${await up.text()}`);
+      }
+      return this.save(m);
     },
-    move(m) {
-      if (!online) { const { url, ...rest } = m; return store('readwrite', s => s.put(rest)); }
-      return rpc('move_media', { p_id: m.id, p_x: m.x, p_y: m.y }).catch(e => console.warn('move not saved', e));
+    save(m, keepalive = false) {
+      if (!online) return local1(m);
+      return rpc('save_item', { p_id: m.id, p_key: m.page.slice(0, -2), p_side: m.page.endsWith('-l') ? 'left' : 'right',
+        p_kind: m.kind, p_content: JSON.stringify(m.content), p_path: m.path || null,
+        p_x: m.x, p_y: m.y, p_w: m.w, p_h: m.h, p_z: m.z }, keepalive);
     },
     async remove(m) {
       if (!online) return store('readwrite', s => s.delete(m.id));
-      await rpc('delete_media', { p_id: m.id });
-      await fetch(objectURL(m.path), { method: 'DELETE', headers: AUTH });
+      await rpc('delete_item', { p_id: m.id });
+      if (m.path) await fetch(objectURL(m.path), { method: 'DELETE', headers: AUTH });
     },
   };
 
+  // Moves, resizes and typing are sent 600 ms after the last change
+  const itemTimers = {};
+  function saveItem(m) {
+    clearTimeout(itemTimers[m.id]);
+    itemTimers[m.id] = setTimeout(() => {
+      delete itemTimers[m.id];
+      mediaStore.save(m).catch(e => console.warn('item not saved', e));
+    }, 600);
+  }
+  addEventListener('pagehide', () => {
+    for (const id of Object.keys(itemTimers)) {
+      clearTimeout(itemTimers[id]);
+      delete itemTimers[id];
+      const m = media.find(m => m.id === id);
+      if (m) mediaStore.save(m, true).catch(() => {});
+    }
+  });
+
   ready.then(() => mediaStore.load()).then(all => {
-    media = all.map(m => ({ ...m, url: URL.createObjectURL(m.blob) }));
+    media = all.map(m => ({ ...m, url: m.blob ? URL.createObjectURL(m.blob) : null }));
+    topZ = Math.max(0, ...media.map(m => m.z || 0));
     document.querySelectorAll('.grid[data-media]').forEach(g => g.removeAttribute('data-filled'));
     fillMedia();
   }).catch(e => console.warn('could not load media', e));
 
   function mediaHTML(m) {
-    const body = m.kind === 'image' ? `<img src="${m.url}" alt="${esc(m.name)}">`
+    const name = esc(m.content.name);
+    const body = m.kind === 'image' ? `<img src="${m.url}" alt="${name}" draggable="false">`
       : m.kind === 'video' ? `<video src="${m.url}" controls preload="metadata"></video>`
-      : `<a class="file-chip" href="${m.url}" target="_blank" rel="noopener"><img src="assets/icon-file.svg" alt="">${esc(m.name)}</a>`;
-    const w = m.kind === 'file' ? '' : `width:${m.w}px;`;
-    return `<div class="media ${m.kind}" data-id="${m.id}" style="left:${m.x}px;top:${m.y}px;${w}">${body}
-      <button class="rm" aria-label="Remove ${esc(m.name)}">×</button></div>`;
+      : m.kind === 'text' ? `<div class="grip" title="Drag to move"></div><textarea data-item="${m.id}" placeholder="Type a note…" aria-label="Note">${esc(m.content.text)}</textarea>`
+      : `<a class="file-chip" href="${m.url}" target="_blank" rel="noopener"><img src="assets/icon-file.svg" alt="">${name}</a>`;
+    const visual = m.kind === 'image' || m.kind === 'video';
+    const size = m.kind === 'document' ? '' : `width:${m.w}px;` + (m.kind === 'text' ? `height:${m.h}px;` : '');
+    return `<div class="media ${m.kind}" data-id="${m.id}" style="left:${m.x}px;top:${m.y}px;z-index:${m.z || 0};${size}">${body}
+      ${visual && m.content.ann ? `<img class="ann-ov" src="${m.content.ann}" alt="">` : ''}
+      ${visual ? `<button class="ann-btn" aria-label="Draw on ${name}" title="Draw on it">✎</button>` : ''}
+      <button class="rm" aria-label="Remove ${name || 'note'}">×</button>
+      ${m.kind === 'document' ? '' : '<i class="rz" title="Drag to resize"></i>'}</div>`;
   }
 
   // Fill every rough page on screen (including a turning sheet) that hasn't been drawn yet
   function fillMedia() {
     document.querySelectorAll('.grid[data-media]:not([data-filled])').forEach(g => {
       g.dataset.filled = '';
-      g.querySelector('.media-layer').innerHTML = media.filter(m => m.key === g.dataset.media).map(mediaHTML).join('');
+      g.querySelector('.media-layer').innerHTML = media.filter(m => m.page === g.dataset.media).map(mediaHTML).join('');
     });
   }
-  const redraw = key => document.querySelectorAll(`.grid[data-media="${key}"]`).forEach(g => {
+  const redraw = page => document.querySelectorAll(`.grid[data-media="${page}"]`).forEach(g => {
     g.removeAttribute('data-filled');
     fillMedia();
   });
+  const newId = () => crypto.randomUUID?.() || 'xxxxxxxx-xxxx-4xxx-8xxx-xxxxxxxxxxxx'.replace(/x/g, () => (Math.random() * 16 | 0).toString(16));
+
+  // Media added from a day's question spread lands on that day's first rough spread
+  function roughPage() {
+    if (sections[current].kind === 'day') go(current + 1);
+    return `${sections[current].id}-l`;
+  }
 
   async function addFiles(files, kind) {
-    let s = sections[current];
-    if (s.kind === 'day') { go(current + 1); s = sections[current]; } // media lands on the day's rough pages
-    const key = `${s.id}-l`;
+    const page = roughPage();
     for (const f of files) {
-      const n = media.filter(m => m.key === key).length;
-      const m = { id: crypto.randomUUID?.() || String(Date.now() + Math.random()), key, kind, name: f.name,
-        blob: f, url: URL.createObjectURL(f), x: 15.5 + (n % 6) * 20, y: 15.5 + (n % 6) * 24, w: 321 };
+      const n = media.filter(m => m.page === page).length;
+      const m = { id: newId(), page, kind, content: { name: f.name }, blob: f, url: URL.createObjectURL(f),
+        x: 15.5 + (n % 6) * 20, y: 15.5 + (n % 6) * 24, w: kind === 'document' ? 200 : 321, h: 0, z: ++topZ };
       media.push(m);
-      redraw(key);
+      redraw(page);
       mediaStore.add(m).catch(e => {
         console.warn('upload failed', e);
         media = media.filter(x => x !== m);
-        redraw(key);
+        redraw(page);
         alert(`“${f.name}” couldn't be uploaded. Check your connection and try again.`);
       });
     }
+  }
+  function addNote() {
+    const page = roughPage();
+    const n = media.filter(m => m.page === page).length;
+    const m = { id: newId(), page, kind: 'text', content: { text: '' }, x: 40 + (n % 6) * 20, y: 40 + (n % 6) * 24, w: 180, h: 120, z: ++topZ };
+    media.push(m);
+    redraw(page);
+    mediaStore.add(m).catch(e => console.warn('note not saved', e));
+    // the spread may still be turning; focus the note once it has landed
+    setTimeout(() => binder.querySelector(`[data-item="${m.id}"]`)?.focus(), sections[current].kind === 'rough' ? 1000 : 0);
   }
 
   const fab = document.getElementById('fab');
@@ -739,49 +1048,177 @@
   };
   fabMenu.onclick = e => {
     const b = e.target.closest('[data-pick]');
-    if (b) document.getElementById('pick-' + b.dataset.pick).click();
+    if (!b) return;
+    const pick = b.dataset.pick;
+    if (pick === 'text') { closeMenu(); addNote(); }
+    else if (pick === 'page') { closeMenu(); addRoughPage(); }
+    else document.getElementById('pick-' + pick).click();
   };
-  ['image', 'file', 'video'].forEach(kind => {
-    const input = document.getElementById('pick-' + kind);
+  [['image', 'image'], ['file', 'document'], ['video', 'video']].forEach(([id, kind]) => {
+    const input = document.getElementById('pick-' + id);
     input.onchange = () => { addFiles([...input.files], kind); input.value = ''; closeMenu(); };
   });
 
-  // Drag a media item around its page, or remove it
   binder.addEventListener('click', e => {
-    const rm = e.target.closest('.rm');
-    if (!rm) return;
-    const el = rm.closest('.media');
+    const el = e.target.closest('.media');
+    if (!el) return;
     const m = media.find(m => m.id === el.dataset.id);
+    if (e.target.closest('.ann-btn')) return openAnnot(m, el);
+    if (!e.target.closest('.rm')) return;
     media = media.filter(x => x !== m);
+    clearTimeout(itemTimers[m.id]);
     mediaStore.remove(m).catch(e => console.warn('remove not saved', e));
-    URL.revokeObjectURL(m.url);
+    if (m.url) URL.revokeObjectURL(m.url);
     el.remove();
   });
+
+  // Drag an item (lifting it above both pages so it can cross the spine), or resize it from its corner
   binder.addEventListener('pointerdown', e => {
     const el = e.target.closest('.media');
-    if (!el || e.target.closest('.rm')) return;
+    if (!el || e.button || e.target.closest('.rm, .ann-btn, textarea')) return;
     const m = media.find(m => m.id === el.dataset.id);
-    const scale = el.getBoundingClientRect().width / el.offsetWidth;
-    const sx = e.clientX, sy = e.clientY, ox = m.x, oy = m.y;
-    let moved = false;
+    const scale = binder.getBoundingClientRect().width / binder.offsetWidth;
+    const sx = e.clientX, sy = e.clientY;
+    const grid = el.closest('.grid');
+    el.style.zIndex = m.z = ++topZ;
+
+    if (e.target.closest('.rz')) {
+      e.preventDefault();
+      const ow = el.offsetWidth, oh = el.offsetHeight;
+      const move = ev => {
+        const dx = (ev.clientX - sx) / scale, dy = (ev.clientY - sy) / scale;
+        m.w = Math.round(Math.max(60, Math.min(grid.clientWidth - m.x, ow + dx)));
+        el.style.width = m.w + 'px';
+        if (m.kind === 'text') {
+          m.h = Math.round(Math.max(40, Math.min(grid.clientHeight - m.y, oh + dy)));
+          el.style.height = m.h + 'px';
+        }
+      };
+      const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); saveItem(m); };
+      addEventListener('pointermove', move);
+      addEventListener('pointerup', up);
+      return;
+    }
+
+    let moved = false, bx = 0, by = 0;
     const move = ev => {
       const dx = (ev.clientX - sx) / scale, dy = (ev.clientY - sy) / scale;
-      if (!moved && Math.hypot(dx, dy) < 4) return;
-      moved = true;
-      const g = el.parentElement;
-      m.x = Math.max(0, Math.min(g.clientWidth - el.offsetWidth, ox + dx));
-      m.y = Math.max(0, Math.min(g.clientHeight - el.offsetHeight, oy + dy));
-      el.style.left = m.x + 'px';
-      el.style.top = m.y + 'px';
+      if (!moved) {
+        if (Math.hypot(dx, dy) < 4) return;
+        moved = true;
+        const br = binder.getBoundingClientRect(), r = el.getBoundingClientRect();
+        bx = (r.left - br.left) / scale;
+        by = (r.top - br.top) / scale;
+        binder.appendChild(el);
+        el.classList.add('lifted');
+      }
+      el.style.left = bx + dx + 'px';
+      el.style.top = by + dy + 'px';
     };
-    const up = () => {
+    const up = ev => {
       removeEventListener('pointermove', move);
       removeEventListener('pointerup', up);
-      if (moved) mediaStore.move(m);
-      else if (m.kind === 'image') window.open(m.url, '_blank'); // a click without a drag opens the full image
+      if (!moved) {
+        if (m.kind === 'image') window.open(m.url, '_blank'); // a click without a drag opens the full image
+        return;
+      }
+      // land on whichever rough page is under the pointer, or snap back to where it came from
+      const target = document.elementsFromPoint(ev.clientX, ev.clientY).find(n => n.matches('#binder .grid[data-media]')) || grid;
+      const gr = target.getBoundingClientRect(), r = el.getBoundingClientRect();
+      m.page = target.dataset.media;
+      m.w = Math.min(m.w, target.clientWidth);
+      if (m.kind !== 'document') el.style.width = m.w + 'px';
+      target.querySelector('.media-layer').appendChild(el);
+      el.classList.remove('lifted');
+      m.x = Math.round(Math.max(0, Math.min(target.clientWidth - el.offsetWidth, (r.left - gr.left) / scale)));
+      m.y = Math.round(Math.max(0, Math.min(target.clientHeight - el.offsetHeight, (r.top - gr.top) / scale)));
+      el.style.left = m.x + 'px';
+      el.style.top = m.y + 'px';
+      saveItem(m);
     };
     addEventListener('pointermove', move);
     addEventListener('pointerup', up);
+  });
+
+  // ---------- annotation editor ----------
+  // Strokes are drawn on a transparent canvas over the image or video frame and saved as a PNG
+  // that's laid over the item at whatever size it's shown.
+  const annot = document.getElementById('annot');
+  const annotStage = document.getElementById('annotStage');
+  let annotState = null;
+  function openAnnot(m, el) {
+    const src = document.createElement(m.kind === 'image' ? 'img' : 'video');
+    src.src = m.url;
+    if (m.kind === 'video') { src.muted = true; src.preload = 'auto'; src.currentTime = el.querySelector('video')?.currentTime || 0; }
+    annotStage.replaceChildren(src);
+    annot.hidden = false;
+    const ready = () => {
+      const w = src.clientWidth, h = src.clientHeight, dpr = devicePixelRatio || 1;
+      const cv = document.createElement('canvas');
+      cv.width = w * dpr; cv.height = h * dpr;
+      cv.style.width = w + 'px'; cv.style.height = h + 'px';
+      annotStage.appendChild(cv);
+      const ctx = cv.getContext('2d');
+      ctx.lineCap = ctx.lineJoin = 'round';
+      if (m.content.ann) {
+        const prev = new Image();
+        prev.onload = () => ctx.drawImage(prev, 0, 0, cv.width, cv.height);
+        prev.src = m.content.ann;
+      }
+      annotState = { m, cv, ctx, dpr, color: annot.querySelector('.sw.on').dataset.color, erase: false, undo: [], dirty: false };
+    };
+    if (m.kind === 'image' ? src.complete && src.naturalWidth : src.readyState >= 2) requestAnimationFrame(ready);
+    else src.addEventListener(m.kind === 'image' ? 'load' : 'loadeddata', () => requestAnimationFrame(ready), { once: true });
+  }
+  function closeAnnot() { annot.hidden = true; annotStage.replaceChildren(); annotState = null; }
+  annotStage.addEventListener('pointerdown', e => {
+    const a = annotState;
+    if (!a || e.target !== a.cv) return;
+    a.undo.push(a.ctx.getImageData(0, 0, a.cv.width, a.cv.height));
+    if (a.undo.length > 30) a.undo.shift();
+    a.dirty = true;
+    const r = a.cv.getBoundingClientRect();
+    const pt = ev => [(ev.clientX - r.left) * a.dpr, (ev.clientY - r.top) * a.dpr];
+    let [lx, ly] = pt(e);
+    a.ctx.globalCompositeOperation = a.erase ? 'destination-out' : 'source-over';
+    a.ctx.strokeStyle = a.color;
+    a.ctx.lineWidth = (a.erase ? 18 : 3.5) * a.dpr;
+    a.cv.setPointerCapture(e.pointerId);
+    const move = ev => {
+      const [x, y] = pt(ev);
+      a.ctx.beginPath(); a.ctx.moveTo(lx, ly); a.ctx.lineTo(x, y); a.ctx.stroke();
+      [lx, ly] = [x, y];
+    };
+    move(e);
+    a.cv.addEventListener('pointermove', move);
+    a.cv.addEventListener('pointerup', () => a.cv.removeEventListener('pointermove', move), { once: true });
+  });
+  annot.addEventListener('click', e => {
+    const a = annotState;
+    if (e.target === annot) return closeAnnot();
+    const sw = e.target.closest('.sw'), tool = e.target.closest('[data-tool], [data-act]');
+    if (sw) {
+      annot.querySelectorAll('.sw').forEach(x => x.classList.toggle('on', x === sw));
+      annot.querySelector('[data-tool]').classList.remove('on');
+      if (a) { a.color = sw.dataset.color; a.erase = false; }
+      return;
+    }
+    if (!tool) return;
+    if (tool.dataset.tool === 'erase') { const on = tool.classList.toggle('on'); if (a) a.erase = on; return; }
+    const act = tool.dataset.act;
+    if (act === 'cancel') return closeAnnot();
+    if (!a) return;
+    if (act === 'undo' && a.undo.length) a.ctx.putImageData(a.undo.pop(), 0, 0);
+    if (act === 'clear') { a.undo.push(a.ctx.getImageData(0, 0, a.cv.width, a.cv.height)); a.ctx.clearRect(0, 0, a.cv.width, a.cv.height); a.dirty = true; }
+    if (act === 'save') {
+      const px = a.ctx.getImageData(0, 0, a.cv.width, a.cv.height).data;
+      let blank = true;
+      for (let i = 3; i < px.length; i += 4) if (px[i]) { blank = false; break; }
+      a.m.content.ann = blank ? null : a.cv.toDataURL('image/png');
+      redraw(a.m.page);
+      mediaStore.save(a.m).catch(e => console.warn('drawing not saved', e));
+      closeAnnot();
+    }
   });
   const contactBtn = document.getElementById('contactBtn');
   const contactCard = document.getElementById('contactCard');
@@ -792,11 +1229,91 @@
   contactBtn.onclick = () => setContact(contactCard.hidden);
   addEventListener('pointerdown', e => { if (!e.target.closest('.contact')) setContact(false); });
 
+  // ---------- onboarding tour ----------
+  // Plays the first time someone opens the diary, and again from the ? button. Steps that point at
+  // day or rough pages turn to that spread first.
+  const TOUR = [
+    { sel: '#tabs', title: 'Welcome to your diary', text: 'These tabs jump between the intro, each of the 5 days, and a spare Rough section at the back.' },
+    { sel: '.controls', title: 'Turning pages', text: 'Use the arrows (or ← → on your keyboard) to flip pages. The × next to your name closes the diary.' },
+    { sec: 'day', sel: '#left .mood', title: 'How did today go?', text: 'Each day, finish the line “Today my day was …” and tap the face that best matches it. Tap it again to clear it.' },
+    { sec: 'day', sel: '#right .page-date', title: 'Date your entries', text: 'Type the date you’re writing on as DD/MM/YYYY. Hover the day’s title to see that day’s task.' },
+    { sec: 'day', sel: '#left .qs', title: 'Answer the questions', text: 'Type straight onto the page. Everything saves automatically as you go.' },
+    { sec: 'day', sel: '.page-count', title: 'Pages within a day', text: 'Each day has a question spread followed by rough pages. This shows which page of the day you’re on.' },
+    { sec: 'dayr', sel: '#binder', title: 'Rough pages are a canvas', text: 'Jot notes, then drag screenshots, videos, files and notes anywhere, even onto the facing page. Pull an item’s corner to resize it, and ✎ to draw on an image or video.' },
+    { sec: 'dayr', sel: '#fab', title: 'Add things', text: 'Use + to add an image, file, video, sticky note, or a whole new rough page.', open: true },
+    { sel: '#helpBtn', title: 'You’re all set', text: 'Replay this tour any time with ?, or email your researchers with the envelope button.' },
+  ];
+  const tour = document.getElementById('tour'), tourSpot = document.getElementById('tourSpot'), tourCard = document.getElementById('tourCard');
+  let tourAt = -1;
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  async function showTour(i) {
+    tourAt = i;
+    const step = tourSteps[i];
+    closeMenu();
+    const want = step.sec ?? (current < 0 ? 'intro' : null);
+    if (want && sections[current]?.id !== want) { go(sections.findIndex(s => s.id === want)); await wait(current < 0 ? 1600 : 1050); }
+    if (tourAt !== i || tour.hidden) return;
+    if (step.open) { fabMenu.hidden = false; fab.setAttribute('aria-expanded', 'true'); }
+    const el = document.querySelector(step.sel);
+    const r = (step.open ? fabMenu : el).getBoundingClientRect();
+    const f = el.getBoundingClientRect();
+    const box = { l: Math.min(r.left, f.left) - 6, t: Math.min(r.top, f.top) - 6, r: Math.max(r.right, f.right) + 6, b: Math.max(r.bottom, f.bottom) + 6 };
+    Object.assign(tourSpot.style, { left: box.l + 'px', top: box.t + 'px', width: box.r - box.l + 'px', height: box.b - box.t + 'px' });
+    document.getElementById('tourTitle').textContent = step.title;
+    document.getElementById('tourText').textContent = step.text;
+    document.getElementById('tourCount').textContent = `${i + 1} / ${tourSteps.length}`;
+    tourCard.querySelector('[data-t="back"]').hidden = i === 0;
+    tourCard.querySelector('[data-t="next"]').textContent = i === tourSteps.length - 1 ? 'Done' : 'Next';
+    // beside the highlight where there's room, otherwise below or above it
+    const cw = 280, ch = tourCard.offsetHeight, gap = 14;
+    let x = box.r + gap, y = box.t;
+    if (x + cw > innerWidth - 8) x = box.l - gap - cw;
+    if (x < 8) { x = Math.min(Math.max(8, box.l), innerWidth - cw - 8); y = box.b + gap; if (y + ch > innerHeight - 8) y = box.t - gap - ch; }
+    tourCard.style.left = x + 'px';
+    tourCard.style.top = Math.max(8, Math.min(innerHeight - ch - 8, y)) + 'px';
+    tourCard.querySelector('[data-t="next"]').focus();
+  }
+  // day steps use whichever day is open today; with none open they're skipped and the canvas steps use the back Rough section
+  let tourSteps = TOUR;
+  function startTour() {
+    const day = openDay === null ? 1 : openDay;
+    tourSteps = TOUR.filter(t => t.sec !== 'day' || day)
+      .map(t => t.sec === 'day' ? { ...t, sec: 'd' + day } : t.sec === 'dayr' ? { ...t, sec: day ? `d${day}r` : 'rough' } : t);
+    tour.hidden = false;
+    showTour(0);
+  }
+  function endTour() {
+    tour.hidden = true;
+    tourAt = -1;
+    closeMenu();
+    try { localStorage.setItem('diary-tour-done', '1'); } catch {}
+  }
+  tourCard.onclick = e => {
+    const t = e.target.closest('[data-t]')?.dataset.t;
+    if (t === 'skip') endTour();
+    if (t === 'back') showTour(tourAt - 1);
+    if (t === 'next') tourAt === tourSteps.length - 1 ? endTour() : showTour(tourAt + 1);
+  };
+  addEventListener('resize', () => { if (!tour.hidden) showTour(tourAt); });
+  document.getElementById('helpBtn').onclick = () => { setContact(false); startTour(); };
+  document.getElementById('cover').addEventListener('click', () => {
+    let done = false;
+    try { done = !!localStorage.getItem('diary-tour-done'); } catch {}
+    if (!done) setTimeout(() => { if (tour.hidden) startTour(); }, 1600);
+  });
+
   addEventListener('keydown', e => {
+    if (!tour.hidden) {
+      if (e.key === 'Escape') endTour();
+      if (e.key === 'ArrowRight') tourAt === tourSteps.length - 1 ? endTour() : showTour(tourAt + 1);
+      if (e.key === 'ArrowLeft' && tourAt > 0) showTour(tourAt - 1);
+      return;
+    }
+    if (!annot.hidden) { if (e.key === 'Escape') closeAnnot(); return; }
     if (e.key === 'Escape' && !contactCard.hidden) { setContact(false); contactBtn.focus(); return; }
     if (/TEXTAREA|INPUT/.test(document.activeElement.tagName)) return;
-    if (e.key === 'ArrowRight') go(current + 1);
-    if (e.key === 'ArrowLeft') go(current - 1);
+    if (e.key === 'ArrowRight') nextBtn.click();
+    if (e.key === 'ArrowLeft' && current >= 0) prevBtn.click();
     if (e.key === 'Escape') go(-1);
   });
 
