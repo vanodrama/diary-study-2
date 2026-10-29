@@ -104,6 +104,17 @@
   #binder { position: absolute; left: 184px; top: 140px; width: 913px; height: 551px; background: var(--accent);
     display: flex; gap: 13px; align-items: center; padding: 12px 24px 12px 12px; transition: background .4s; }
   #binder .slot { width: 432px; height: 527px; position: relative; }
+  /* tap the outer edge of the spread to turn the page: the binder's rim plus the page's blank outer margin */
+  .edge { position: absolute; top: 0; height: 100%; border: 0; padding: 0; background: none; cursor: pointer; z-index: 5;
+    display: grid; place-items: center; }
+  .edge.prev { left: 0; width: 15px; }
+  .edge.next { right: 0; width: 28px; }
+  .edge::before { content: ''; position: absolute; inset: 12px 0; opacity: 0; transition: opacity .2s; }
+  .edge.prev::before { background: linear-gradient(90deg, rgba(0,0,0,.18), transparent); }
+  .edge.next::before { background: linear-gradient(270deg, rgba(0,0,0,.18), transparent); }
+  .edge span { position: relative; font-size: 18px; color: rgba(0,0,0,.55); opacity: 0; transition: opacity .2s; }
+  .edge:hover::before, .edge:hover span, .edge:focus-visible span { opacity: 1; }
+  .edge:disabled { display: none; }
 
   /* intro spread extras */
   /* Figma 40:992: spine holes on the intro's left half, punched through to the dark binder */
@@ -529,6 +540,8 @@
   <div id="binder">
     <div class="slot" id="left"></div>
     <div class="slot" id="right"></div>
+    <button class="edge prev" id="edgePrev" aria-label="Previous page"><span>‹</span></button>
+    <button class="edge next" id="edgeNext" aria-label="Next page"><span>›</span></button>
     <div class="fab-menu" id="fabMenu" hidden>
       <button data-pick="image"><img src="assets/icon-image.svg" alt="" width="16" height="16">Image</button>
       <button data-pick="file"><img src="assets/icon-file.svg" alt="" width="16" height="16">File</button>
@@ -927,7 +940,12 @@
   function drawNav() {
     prevBtn.disabled = current < 0;
     nextBtn.disabled = current >= 0 && step(1) < 0;
+    edgePrev.disabled = current <= 0;
+    edgeNext.disabled = nextBtn.disabled;
   }
+  const edgePrev = document.getElementById('edgePrev'), edgeNext = document.getElementById('edgeNext');
+  edgePrev.onclick = () => prevBtn.click();
+  edgeNext.onclick = () => nextBtn.click();
 
   const [prevBtn, closeBtn, nextBtn] = ['prev', 'close', 'next'].map(id => document.getElementById(id));
   prevBtn.onclick = () => { const i = step(-1); go(i < 0 ? 0 : i); };
