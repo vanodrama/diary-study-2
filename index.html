@@ -266,6 +266,13 @@
   .media:hover .rz { opacity: 1; }
   .media.lifted { z-index: 50 !important; cursor: grabbing; box-shadow: 4px 8px 18px rgba(0,0,0,.3); }
   .turn .rz { display: none; }
+  /* an edited picture: its frame, the picture placed inside it, then the drawing and text on top */
+  .media .win { position: relative; overflow: hidden; background: #fbf9ef; container-type: inline-size; }
+  .media .win > .win-pic { position: absolute; height: auto; max-width: none; }
+  .media .win .ann-ov { z-index: 1; }
+  .media .win-text { position: absolute; z-index: 2; line-height: 1.2; padding: 0 .4cqw; white-space: pre-wrap; overflow-wrap: anywhere;
+    font-family: Inter, sans-serif; pointer-events: none; }
+  .media.video .win .ann-ov, .media.video .win-text { pointer-events: none; }
   /* a cropped image shows only its crop box, with the drawing cropped the same way */
   .media .crop { position: relative; overflow: hidden; }
   .media .crop-in { position: absolute; }
@@ -336,18 +343,38 @@
   body.closed .diary-head, body.closed .controls { opacity: 0; pointer-events: none; }
 
   /* ---------- annotation editor (Figma 45:2007) ---------- */
-  .annot { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.7); display: grid; place-items: center; }
-  .annot-card { position: relative; width: 450px; height: 550px; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,.5); }
+  .annot { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; }
+  /* two sizes: small (Figma 45:2007) for portraits and small images, large (47:2193) for landscape and big ones.
+     --fit shrinks the card when the window is smaller than it */
+  .annot-card { position: relative; width: 450px; height: 550px; background: #fff; box-shadow: 0 10px 40px rgba(0,0,0,.5);
+    transform: scale(var(--fit, 1)); flex: none; }
+  .annot-card.large { width: 967px; height: 683px; }
   .annot-title { position: absolute; left: 18px; top: 22px; font-size: 16px; line-height: 24px; letter-spacing: -.96px; color: #4b4b4b; }
   .annot-area { position: absolute; left: 16px; top: 59px; width: 418px; height: 382px; background: #fbf9ef; border: 1px solid #afafaf;
     display: grid; place-items: center; overflow: hidden; }
-  .annot-stage { position: relative; line-height: 0; overflow: hidden; }
-  .annot-stage img, .annot-stage video { display: block; max-width: 416px; max-height: 380px; }
-  .annot-stage canvas { position: absolute; left: 0; top: 0; cursor: crosshair; touch-action: none; }
+  /* the frame is the window: the picture sits inside it, and drawing and text can go anywhere in it */
+  .annot-stage { position: relative; overflow: hidden; touch-action: none; }
+  .annot-stage > img, .annot-stage > video { position: absolute; max-width: none; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+  .annot-stage canvas { position: absolute; left: 0; top: 0; cursor: crosshair; }
   .annot-stage.text canvas { cursor: text; }
-  .annot-text { position: absolute; z-index: 2; min-width: 120px; border: 1px dashed currentColor; background: rgba(255,255,255,.6);
-    outline: none; padding: 0 2px; font: 16px/1.2 Inter, sans-serif; }
-  .crop-box { position: absolute; pointer-events: none; border: 1.5px dashed #fff; box-shadow: 0 0 0 9999px rgba(0,0,0,.45); }
+  .annot-stage.crop canvas { cursor: grab; }
+  .annot-stage.crop.panning canvas { cursor: grabbing; }
+  .annot-texts { position: absolute; inset: 0; pointer-events: none; }
+  .atext { position: absolute; pointer-events: auto; line-height: 1.2; font-family: Inter, sans-serif; cursor: text; }
+  .atext-body { outline: none; white-space: pre-wrap; overflow-wrap: anywhere; min-height: 1.2em; padding: 1px 2px; }
+  .atext.on { outline: 1px dashed currentColor; background: rgba(255,255,255,.55); }
+  .atext i, .atext .atext-del { position: absolute; display: none; }
+  .atext.on i, .atext.on .atext-del { display: block; }
+  .atext-move { left: -9px; top: -9px; width: 14px; height: 14px; border-radius: 50%; background: #000; cursor: move; }
+  .atext-w { right: -5px; top: 50%; width: 8px; height: 18px; margin-top: -9px; border-radius: 3px; background: #fff; border: 1.5px solid #000; cursor: ew-resize; }
+  .atext-del { right: -9px; top: -9px; width: 16px; height: 16px; border-radius: 50%; border: 0; background: #000; color: #fff;
+    font: 11px/16px Inter, sans-serif; padding: 0; cursor: pointer; }
+  .annot-zoom { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); display: none; align-items: center; gap: 8px;
+    padding: 6px 10px; background: rgba(255,255,255,.92); border-radius: 20px; box-shadow: 0 1px 6px rgba(0,0,0,.2);
+    font: 11px Inter, sans-serif; color: #4b4b4b; white-space: nowrap; }
+  .annot-stage.crop + .annot-zoom, .annot-zoom.on { display: flex; }
+  .annot-zoom button { border: 0; background: none; font: 16px/1 Inter, sans-serif; cursor: pointer; padding: 0 2px; }
+  .annot-zoom input { width: 110px; }
   .annot-swatches { position: absolute; left: 24px; top: 468px; display: flex; gap: 6px; }
   .annot-swatches button { width: 16px; height: 16px; border-radius: 50%; border: 0; padding: 0; background: var(--c); cursor: pointer; }
   .annot-swatches button.on { box-shadow: 0 0 0 1.5px #fff, 0 0 0 2.5px #000; }
@@ -365,7 +392,21 @@
   .annot-tools img { display: block; }
   .annot-save { position: absolute; left: 334px; top: 492px; width: 100px; height: 42px; border: 0; border-radius: 4px; background: #000;
     color: #fff; font: 14px/24px Inter, sans-serif; cursor: pointer; }
-  .annot-close { position: absolute; right: 12px; top: 18px; border: 0; background: none; font-size: 20px; line-height: 1; color: #4b4b4b; cursor: pointer; padding: 4px; }
+  .annot-head { position: absolute; border: 0; padding: 0; background: none; cursor: pointer; top: 22px; }
+  .annot-head img { display: block; }
+  .annot-size { left: 374px; }
+  .annot-close { left: 410px; }
+  .annot-card .big-only, .annot-card.large .small-only { display: none; }
+  .annot-card.large .big-only { display: block; }
+  .annot-card.large .annot-head { top: 25px; }
+  .annot-card.large .annot-size { left: 869px; }
+  .annot-card.large .annot-close { left: 919px; }
+  .annot-card.large .annot-title { left: 16px; top: 32px; font-size: 24px; letter-spacing: -1.44px; }
+  .annot-card.large .annot-area { top: 75px; width: 935px; height: 499px; }
+  .annot-card.large .annot-swatches { left: 301px; top: 601px; }
+  .annot-card.large .annot-pen { left: 293px; top: 617px; }
+  .annot-card.large .annot-tools { left: calc(50% + .5px); top: 622px; transform: translateX(-50%); }
+  .annot-card.large .annot-save { left: 836px; top: 622px; }
 
   /* ---------- access code (Figma 39:112): first visit, before the diary opens ---------- */
   /* covers the whole window; the card scales with the diary frame (--k is set by fit()) */
@@ -570,8 +611,14 @@
 <div class="annot" id="annot" role="dialog" aria-labelledby="annotTitle" hidden>
   <div class="annot-card">
     <p class="annot-title" id="annotTitle">Annotate your Image</p>
-    <button class="annot-close" data-act="cancel" aria-label="Cancel without saving">×</button>
-    <div class="annot-area"><div class="annot-stage" id="annotStage"></div></div>
+    <button class="annot-head annot-size" data-act="size" aria-label="Switch size">
+      <img class="small-only" src="assets/icon-expand.svg" alt="" width="24" height="24"><img class="big-only" src="assets/icon-collapse.svg" alt="" width="32" height="32"></button>
+    <button class="annot-head annot-close" data-act="cancel" aria-label="Cancel without saving">
+      <img class="small-only" src="assets/icon-close-24.svg" alt="" width="24" height="24"><img class="big-only" src="assets/icon-close-32.svg" alt="" width="32" height="32"></button>
+    <div class="annot-area"><div class="annot-stage" id="annotStage"></div>
+      <div class="annot-zoom" id="annotZoom"><button data-zoom="-1" aria-label="Zoom out">−</button>
+        <input type="range" id="annotZoomRange" min="50" max="400" step="1" value="100" aria-label="Zoom"><button data-zoom="1" aria-label="Zoom in">+</button>
+        <span>Drag to move · what’s in the frame is kept</span></div></div>
     <div class="annot-swatches" role="group" aria-label="Colour">
       <button class="sw on" style="--c:#f11212" data-color="#f11212" aria-label="Red"></button>
       <button class="sw" style="--c:#f8d50e" data-color="#f8d50e" aria-label="Yellow"></button>
@@ -1101,9 +1148,26 @@
     fillMedia();
   }).catch(e => console.warn('could not load media', e));
 
+  // Where the picture sits inside an edited item's frame, as percentages of the frame:
+  // F is the frame's width/height, ar the picture's, view its zoom and centre
+  function pictureBox(ar, F, v) {
+    const w = Math.min(1, ar / F) * v.z;
+    return { l: (v.cx - w / 2) * 100, t: (v.cy - w * F / ar / 2) * 100, w: w * 100 };
+  }
+  const textsHTML = (texts = []) => texts.map(t => `<div class="win-text" style="left:${t.x * 100}%;top:${t.y * 100}%;width:${t.w * 100}%;`
+    + `color:${t.color};font-size:${t.f * 100}cqw">${esc(t.text)}</div>`).join('');
   function mediaHTML(m) {
     const name = esc(m.content.name);
     const ann = m.content.ann ? `<img class="ann-ov" src="${m.content.ann}" alt="">` : '';
+    const v = (m.kind === 'image' || m.kind === 'video') && m.content.view;
+    if (v) {
+      const F = m.content.frame, b = pictureBox(m.content.ar, F, v);
+      const pic = m.kind === 'image' ? `<img class="win-pic" src="${m.url}" alt="${name}" draggable="false"` : `<video class="win-pic" src="${m.url}" controls preload="metadata"`;
+      const body = `<div class="win" style="aspect-ratio:${F}">${pic} style="left:${b.l}%;top:${b.t}%;width:${b.w}%">${m.kind === 'video' ? '</video>' : ''}`
+        + `${ann}${textsHTML(m.content.texts)}</div>`;
+      const handles = ['nw', 'ne', 'sw', 'se'].map(c => `<i class="rz ${c}" data-c="${c}"></i>`).join('');
+      return `<div class="media ${m.kind}" data-id="${m.id}" style="left:${m.x}px;top:${m.y}px;z-index:${m.z || 0};width:${m.w}px" title="Drag to move · right-click to edit or delete">${body}${handles}</div>`;
+    }
     const c = m.kind === 'image' && m.content.crop, ar = m.content.ar || 1;
     const body = m.kind === 'image'
         ? (c ? `<div class="crop" style="aspect-ratio:${c.w * ar}/${c.h}"><div class="crop-in" style="width:${100 / c.w}%;height:${100 / c.h}%;left:${-c.x / c.w * 100}%;top:${-c.y / c.h * 100}%">`
@@ -1306,122 +1370,219 @@
   });
 
   // ---------- annotation editor ----------
-  // Pen strokes and text are drawn on a transparent canvas over the image (or video frame) and saved
-  // as a PNG laid over the item at whatever size it's shown. Crop (images only) is kept as fractions of
-  // the full image, so the original is never changed.
+  // The frame is a window onto the picture. Crop zooms and moves the picture inside it, and whatever is in the
+  // frame is what the page shows. Pen strokes cover the whole frame (saved as a PNG), and text stays as
+  // separate boxes that can be tapped to edit, moved or narrowed. Positions are kept as fractions of the frame.
   const annot = document.getElementById('annot');
   const annotStage = document.getElementById('annotStage');
+  const annotCard = annot.querySelector('.annot-card');
+  const zoomRange = document.getElementById('annotZoomRange');
+  const FRAMES = { small: [416, 380], large: [933, 497] };
   let annotState = null;
+
   function openAnnot(m, el) {
     const src = document.createElement(m.kind === 'image' ? 'img' : 'video');
     src.src = m.url;
     if (m.kind === 'video') { src.muted = true; src.preload = 'auto'; src.currentTime = el?.querySelector('video')?.currentTime || 0; }
+    src.draggable = false;
     annotStage.replaceChildren(src);
-    annotStage.className = 'annot-stage';
     annot.querySelector('.crop-only').hidden = m.kind !== 'image';
     document.getElementById('annotTitle').textContent = `Annotate your ${m.kind === 'image' ? 'Image' : 'Video'}`;
     annot.hidden = false;
     const ready = () => {
-      const w = src.clientWidth, h = src.clientHeight, dpr = devicePixelRatio || 1;
-      const cv = document.createElement('canvas');
-      cv.width = w * dpr; cv.height = h * dpr;
-      cv.style.width = w + 'px'; cv.style.height = h + 'px';
-      const box = document.createElement('div');
-      box.className = 'crop-box';
-      annotStage.append(cv, box);
-      const ctx = cv.getContext('2d');
-      ctx.lineCap = ctx.lineJoin = 'round';
-      if (m.content.ann) {
-        const prev = new Image();
-        prev.onload = () => ctx.drawImage(prev, 0, 0, cv.width, cv.height);
-        prev.src = m.content.ann;
-      }
-      annotState = { m, src, cv, ctx, dpr, box, color: annot.querySelector('.sw.on').dataset.color, undo: [],
-        crop: m.content.crop ? { ...m.content.crop } : null };
+      const nw = src.naturalWidth || src.videoWidth, nh = src.naturalHeight || src.videoHeight;
+      const c = m.content;
+      annotState = { m, src, ar: nw / nh, color: annot.querySelector('.sw.on').dataset.color, undo: [],
+        view: c.view ? { ...c.view } : { z: 1, cx: .5, cy: .5 },
+        texts: (c.texts || []).map(t => ({ ...t, id: newId() })),
+        legacyAnn: !c.view && c.ann };   // drawings from before the frame model sat on the picture only
+      setAnnotSize(c.mode ? c.mode === 'large' : nw / nh > 1.15 || nw > 900);
+      layoutAnnot(c.view ? c.ann : null);
       setTool('pen');
-      drawCropBox();
     };
     if (m.kind === 'image' ? src.complete && src.naturalWidth : src.readyState >= 2) requestAnimationFrame(ready);
     else src.addEventListener(m.kind === 'image' ? 'load' : 'loadeddata', () => requestAnimationFrame(ready), { once: true });
   }
-  function closeAnnot() { commitText(); annot.hidden = true; annotStage.replaceChildren(); annotState = null; }
+
+  function setAnnotSize(large) {
+    annotCard.classList.toggle('large', large);
+    const [w, h] = large ? [967, 683] : [450, 550];
+    annotCard.style.setProperty('--fit', Math.min(1, (innerWidth - 32) / w, (innerHeight - 32) / h));
+  }
+
+  // (Re)builds the frame at the current size, carrying over the drawing so far
+  function layoutAnnot(drawing) {
+    const a = annotState;
+    let [FW, FH] = FRAMES[annotCard.classList.contains('large') ? 'large' : 'small'];
+    if (a.m.kind === 'video') {   // a video can't be cropped, so its frame is the video itself
+      const k = Math.min(FW / a.ar, FH);
+      [FW, FH] = [Math.round(k * a.ar), Math.round(k)];
+      a.view = { z: 1, cx: .5, cy: .5 };
+    }
+    Object.assign(annotStage.style, { width: FW + 'px', height: FH + 'px' });
+    a.cv?.remove(); a.layer?.remove();
+    const dpr = devicePixelRatio || 1;
+    const cv = document.createElement('canvas');
+    cv.width = FW * dpr; cv.height = FH * dpr;
+    cv.style.width = FW + 'px'; cv.style.height = FH + 'px';
+    const layer = document.createElement('div');
+    layer.className = 'annot-texts';
+    annotStage.append(cv, layer);
+    const ctx = cv.getContext('2d');
+    ctx.lineCap = ctx.lineJoin = 'round';
+    Object.assign(a, { FW, FH, cv, ctx, dpr, layer, undo: [] });
+    placePicture();
+    const old = drawing || a.legacyAnn;
+    if (old) {
+      const prev = new Image();
+      prev.onload = () => {
+        if (drawing) ctx.drawImage(prev, 0, 0, cv.width, cv.height);
+        else { const b = picturePx(); ctx.drawImage(prev, b.l * dpr, b.t * dpr, b.w * dpr, b.h * dpr); }
+      };
+      prev.src = old;
+      a.legacyAnn = null;
+    }
+    drawTexts();
+  }
+  function picturePx() {
+    const a = annotState, b = pictureBox(a.ar, a.FW / a.FH, a.view);
+    return { l: b.l / 100 * a.FW, t: b.t / 100 * a.FH, w: b.w / 100 * a.FW, h: b.w / 100 * a.FW / a.ar };
+  }
+  function placePicture() {
+    const a = annotState, b = picturePx();
+    Object.assign(a.src.style, { left: b.l + 'px', top: b.t + 'px', width: b.w + 'px', height: b.h + 'px' });
+    zoomRange.value = Math.round(a.view.z * 100);
+  }
+  function setZoom(z, fx = .5, fy = .5) {
+    // zoom about a point of the frame (fractions), keeping that point of the picture under it
+    const a = annotState, v = a.view;
+    z = Math.max(.5, Math.min(4, z));
+    v.cx = fx + (v.cx - fx) * z / v.z;
+    v.cy = fy + (v.cy - fy) * z / v.z;
+    v.z = z;
+    placePicture();
+  }
+
+  function closeAnnot() { annot.hidden = true; annotStage.replaceChildren(); annotState = null; }
   function setTool(tool) {
-    if (annotState) annotState.tool = tool;
+    const a = annotState;
+    if (a) a.tool = tool;
     annot.querySelectorAll('[data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === tool));
     annotStage.classList.toggle('text', tool === 'text');
-    commitText();
+    annotStage.classList.toggle('crop', tool === 'crop');
+    if (tool !== 'text') selectText(null);
   }
-  function drawCropBox() {
+  const snapshot = a => {
+    a.undo.push({ px: a.ctx.getImageData(0, 0, a.cv.width, a.cv.height), view: { ...a.view }, texts: JSON.stringify(a.texts) });
+    if (a.undo.length > 30) a.undo.shift();
+  };
+
+  // ----- text boxes -----
+  const TEXT_PX = 16;
+  function drawTexts() {
+    const a = annotState;
+    a.layer.innerHTML = a.texts.map(t => `<div class="atext${t.id === a.sel ? ' on' : ''}" data-t="${t.id}" style="left:${t.x * a.FW}px;top:${t.y * a.FH}px;`
+      + `width:${t.w * a.FW}px;color:${t.color};font-size:${t.f * a.FW}px"><div class="atext-body" contenteditable="true" spellcheck="false">${esc(t.text)}</div>`
+      + `<i class="atext-move" title="Drag to move"></i><i class="atext-w" title="Drag to change width"></i>`
+      + `<button class="atext-del" aria-label="Delete text">×</button></div>`).join('');
+  }
+  const textEl = id => annotState.layer.querySelector(`[data-t="${id}"]`);
+  function selectText(id, focus) {
     const a = annotState;
     if (!a) return;
-    a.box.hidden = !a.crop;
-    if (!a.crop) return;
-    const W = a.cv.clientWidth, H = a.cv.clientHeight;
-    Object.assign(a.box.style, { left: a.crop.x * W + 'px', top: a.crop.y * H + 'px', width: a.crop.w * W + 'px', height: a.crop.h * H + 'px' });
+    // leaving a box that's still empty removes it
+    const prev = a.texts.find(t => t.id === a.sel);
+    if (prev && prev.id !== id && !prev.text.trim()) { a.texts = a.texts.filter(t => t !== prev); textEl(prev.id)?.remove(); }
+    a.sel = id;
+    a.layer.querySelectorAll('.atext').forEach(n => n.classList.toggle('on', n.dataset.t === id));
+    if (id && focus) {
+      const body = textEl(id)?.querySelector('.atext-body');
+      body?.focus();
+      if (body) { const r = document.createRange(); r.selectNodeContents(body); r.collapse(false); getSelection().removeAllRanges(); getSelection().addRange(r); }
+    }
   }
-  const snapshot = a => { a.undo.push({ px: a.ctx.getImageData(0, 0, a.cv.width, a.cv.height), crop: a.crop && { ...a.crop } }); if (a.undo.length > 30) a.undo.shift(); };
-
-  // Text: click where it should go, type, then Enter (or click elsewhere) to place it
-  let textInput = null;
-  function commitText() {
-    const a = annotState, t = textInput;
-    textInput = null;
-    if (!t) return;
-    t.remove();
-    if (!a || !t.value.trim()) return;
+  // Text boxes never overlap: going down the frame, a box that runs into the one above is pushed below it
+  function unstackTexts() {
+    const a = annotState, gap = 4;
+    const boxes = a.texts.map(t => ({ t, el: textEl(t.id) })).filter(b => b.el).sort((p, q) => p.t.y - q.t.y);
+    const placed = [];
+    for (const b of boxes) {
+      let y = b.t.y * a.FH, h = b.el.offsetHeight, x0 = b.t.x * a.FW, x1 = x0 + b.t.w * a.FW;
+      for (const p of placed) if (x0 < p.x1 && x1 > p.x0 && y < p.y1 + gap && y + h > p.y0 - gap) y = p.y1 + gap;
+      y = Math.min(y, Math.max(0, a.FH - h));
+      b.t.y = y / a.FH;
+      b.el.style.top = y + 'px';
+      placed.push({ x0, x1, y0: y, y1: y + h });
+    }
+  }
+  function addText(px, py) {
+    const a = annotState;
     snapshot(a);
-    a.ctx.globalCompositeOperation = 'source-over';
-    a.ctx.fillStyle = a.color;
-    a.ctx.font = `${16 * a.dpr}px Inter, sans-serif`;
-    a.ctx.textBaseline = 'top';
-    a.ctx.fillText(t.value, (parseFloat(t.style.left) + 3) * a.dpr, (parseFloat(t.style.top) + 1) * a.dpr);
+    const w = Math.min(160, a.FW - px);
+    const t = { id: newId(), x: px / a.FW, y: Math.max(0, py - 10) / a.FH, w: Math.max(40, w) / a.FW, f: TEXT_PX / a.FW, color: a.color, text: '' };
+    a.texts.push(t);
+    drawTexts();
+    selectText(t.id, true);
   }
+  annotStage.addEventListener('input', e => {
+    const a = annotState, box = e.target.closest('.atext');
+    if (!a || !box) return;
+    const t = a.texts.find(t => t.id === box.dataset.t);
+    t.text = e.target.innerText.replace(/\n$/, '');
+    unstackTexts();
+  });
+
+  // ----- pointer: text boxes, pen/eraser, new text, crop panning -----
   annotStage.addEventListener('pointerdown', e => {
     const a = annotState;
-    if (!a || e.target !== a.cv) return;
-    const r = a.cv.getBoundingClientRect();
-    if (a.tool === 'text') {
+    if (!a) return;
+    const r = annotStage.getBoundingClientRect(), k = a.FW / r.width;
+    const px = ev => (ev.clientX - r.left) * k, py = ev => (ev.clientY - r.top) * k;
+    const box = e.target.closest('.atext');
+    if (box) {
+      const t = a.texts.find(t => t.id === box.dataset.t);
+      if (e.target.closest('.atext-del')) { e.preventDefault(); snapshot(a); a.texts = a.texts.filter(x => x !== t); a.sel = null; drawTexts(); return; }
+      const handle = e.target.closest('.atext-move, .atext-w');
+      if (a.sel !== t.id) selectText(t.id, !handle);
+      if (!handle) return;   // a tap in the box just edits it
       e.preventDefault();
-      commitText();
-      textInput = document.createElement('input');
-      textInput.className = 'annot-text';
-      textInput.style.left = e.clientX - r.left + 'px';
-      textInput.style.top = e.clientY - r.top - 10 + 'px';
-      textInput.style.color = a.color;
-      textInput.addEventListener('keydown', ev => {
-        if (ev.key === 'Enter') commitText();
-        if (ev.key === 'Escape') { ev.stopPropagation(); textInput.value = ''; commitText(); }
-      });
-      annotStage.appendChild(textInput);
-      setTimeout(() => textInput?.focus());
+      snapshot(a);
+      const sx = px(e), sy = py(e), ox = t.x * a.FW, oy = t.y * a.FH, ow = t.w * a.FW;
+      const move = ev => {
+        if (handle.classList.contains('atext-w')) {
+          t.w = Math.max(30, Math.min(a.FW - ox, ow + px(ev) - sx)) / a.FW;
+          box.style.width = t.w * a.FW + 'px';
+        } else {
+          t.x = Math.max(0, Math.min(a.FW - ow, ox + px(ev) - sx)) / a.FW;
+          t.y = Math.max(0, Math.min(a.FH - box.offsetHeight, oy + py(ev) - sy)) / a.FH;
+          Object.assign(box.style, { left: t.x * a.FW + 'px', top: t.y * a.FH + 'px' });
+        }
+      };
+      const up = () => { removeEventListener('pointermove', move); removeEventListener('pointerup', up); unstackTexts(); };
+      addEventListener('pointermove', move);
+      addEventListener('pointerup', up);
       return;
     }
+    if (e.target !== a.cv) return;
+    if (a.sel) { selectText(null); if (a.tool === 'text') return; }
+    if (a.tool === 'text') { e.preventDefault(); addText(px(e), py(e)); return; }
     snapshot(a);
     a.cv.setPointerCapture(e.pointerId);
     if (a.tool === 'crop') {
-      // drag a box; what's outside it is hidden on the page
-      const fx = ev => Math.max(0, Math.min(1, (ev.clientX - r.left) / r.width));
-      const fy = ev => Math.max(0, Math.min(1, (ev.clientY - r.top) / r.height));
-      const x0 = fx(e), y0 = fy(e);
-      const move = ev => {
-        const x1 = fx(ev), y1 = fy(ev);
-        a.crop = { x: Math.min(x0, x1), y: Math.min(y0, y1), w: Math.abs(x1 - x0), h: Math.abs(y1 - y0) };
-        drawCropBox();
-      };
+      // drag moves the picture inside the frame
+      const sx = px(e), sy = py(e), ocx = a.view.cx, ocy = a.view.cy;
+      annotStage.classList.add('panning');
+      const move = ev => { a.view.cx = ocx + (px(ev) - sx) / a.FW; a.view.cy = ocy + (py(ev) - sy) / a.FH; placePicture(); };
       a.cv.addEventListener('pointermove', move);
-      a.cv.addEventListener('pointerup', () => {
-        a.cv.removeEventListener('pointermove', move);
-        if (a.crop && (a.crop.w < .03 || a.crop.h < .03)) { a.crop = null; drawCropBox(); }
-      }, { once: true });
+      a.cv.addEventListener('pointerup', () => { a.cv.removeEventListener('pointermove', move); annotStage.classList.remove('panning'); }, { once: true });
       return;
     }
-    const pt = ev => [(ev.clientX - r.left) * a.dpr, (ev.clientY - r.top) * a.dpr];
-    let [lx, ly] = pt(e);
+    let lx = px(e) * a.dpr, ly = py(e) * a.dpr;
     a.ctx.globalCompositeOperation = a.tool === 'erase' ? 'destination-out' : 'source-over';
     a.ctx.strokeStyle = a.color;
     a.ctx.lineWidth = (a.tool === 'erase' ? 18 : 3.5) * a.dpr;
     const move = ev => {
-      const [x, y] = pt(ev);
+      const x = px(ev) * a.dpr, y = py(ev) * a.dpr;
       a.ctx.beginPath(); a.ctx.moveTo(lx, ly); a.ctx.lineTo(x, y); a.ctx.stroke();
       [lx, ly] = [x, y];
     };
@@ -1429,39 +1590,70 @@
     a.cv.addEventListener('pointermove', move);
     a.cv.addEventListener('pointerup', () => a.cv.removeEventListener('pointermove', move), { once: true });
   });
+  // scroll to zoom while cropping
+  annotStage.addEventListener('wheel', e => {
+    const a = annotState;
+    if (!a || a.tool !== 'crop') return;
+    e.preventDefault();
+    const r = annotStage.getBoundingClientRect();
+    setZoom(a.view.z * Math.exp(-e.deltaY / 400), (e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
+  }, { passive: false });
+  zoomRange.addEventListener('input', () => annotState && setZoom(zoomRange.value / 100));
+
   annot.addEventListener('click', e => {
     const a = annotState;
     if (e.target === annot) return closeAnnot();
     const sw = e.target.closest('.sw');
     if (sw) {
       annot.querySelectorAll('.sw').forEach(x => x.classList.toggle('on', x === sw));
-      if (a) a.color = sw.dataset.color;
-      if (textInput) textInput.style.color = sw.dataset.color;
-      if (a && (a.tool === 'erase' || a.tool === 'crop')) setTool('pen');
+      if (!a) return;
+      a.color = sw.dataset.color;
+      const t = a.texts.find(t => t.id === a.sel);
+      if (t) { t.color = a.color; textEl(t.id).style.color = a.color; }
+      else if (a.tool === 'erase' || a.tool === 'crop') setTool('pen');
       return;
     }
+    const zoomBy = e.target.closest('[data-zoom]')?.dataset.zoom;
+    if (zoomBy && a) return setZoom(a.view.z * (zoomBy > 0 ? 1.2 : 1 / 1.2));
     const tool = e.target.closest('[data-tool]')?.dataset.tool;
     if (tool) return setTool(tool);
     const act = e.target.closest('[data-act]')?.dataset.act;
     if (act === 'cancel') return closeAnnot();
     if (!a || !act) return;
-    commitText();
-    if (act === 'undo' && a.undo.length) { const u = a.undo.pop(); a.ctx.putImageData(u.px, 0, 0); a.crop = u.crop; drawCropBox(); }
-    if (act === 'clear') { snapshot(a); a.ctx.clearRect(0, 0, a.cv.width, a.cv.height); a.crop = null; drawCropBox(); }
+    if (act === 'size') {
+      const drawing = a.cv.toDataURL('image/png');
+      setAnnotSize(!annotCard.classList.contains('large'));
+      layoutAnnot(drawing);
+      return;
+    }
+    if (act === 'undo' && a.undo.length) {
+      const u = a.undo.pop();
+      a.ctx.putImageData(u.px, 0, 0);
+      a.view = u.view;
+      a.texts = JSON.parse(u.texts);
+      a.sel = null;
+      placePicture();
+      drawTexts();
+    }
     if (act === 'save') {
+      selectText(null);
       const px = a.ctx.getImageData(0, 0, a.cv.width, a.cv.height).data;
       let blank = true;
       for (let i = 3; i < px.length; i += 4) if (px[i]) { blank = false; break; }
-      a.m.content.ann = blank ? null : a.cv.toDataURL('image/png');
-      if (a.m.kind === 'image') {
-        a.m.content.crop = a.crop;
-        a.m.content.ar = a.src.naturalWidth / a.src.naturalHeight;
-      }
+      const c = a.m.content;
+      c.ann = blank ? null : a.cv.toDataURL('image/png');
+      c.view = a.view;
+      c.frame = a.FW / a.FH;
+      c.ar = a.ar;
+      c.mode = annotCard.classList.contains('large') ? 'large' : 'small';
+      c.texts = a.texts.filter(t => t.text.trim()).map(({ id, ...t }) => t);
+      delete c.crop;
       redraw(a.m.page);
       mediaStore.save(a.m).catch(e => console.warn('edit not saved', e));
       closeAnnot();
     }
   });
+
   const contactBtn = document.getElementById('contactBtn');
   const contactCard = document.getElementById('contactCard');
   const setContact = open => {
@@ -1634,7 +1826,7 @@
       if (e.key === 'ArrowLeft' && tourAt > 0) showTour(tourAt - 1);
       return;
     }
-    if (!annot.hidden) { if (e.key === 'Escape') closeAnnot(); return; }
+    if (!annot.hidden) { if (e.key === 'Escape') { if (annotState?.sel) selectText(null); else closeAnnot(); } return; }
     if (e.key === 'Escape' && !contactCard.hidden) { setContact(false); contactBtn.focus(); return; }
     if (/TEXTAREA|INPUT/.test(document.activeElement.tagName)) return;
     if (e.key === 'ArrowRight') nextBtn.click();
