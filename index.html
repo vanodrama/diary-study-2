@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Diary Study</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;700&family=Caveat&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #1b1b1b;
@@ -328,6 +328,31 @@
   .annot-bar .grow { flex: 1; }
   .annot-bar .save { background: var(--bg); color: var(--paper); border-color: var(--bg); }
 
+  /* ---------- access code (Figma 39:112): first visit, before the diary opens ---------- */
+  /* covers the whole window; the card scales with the diary frame (--k is set by fit()) */
+  .gate { position: fixed; inset: 0; z-index: 40;
+    background: rgba(0,0,0,.3); backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); }
+  .gate-card { position: absolute; left: calc(50% + .5px); top: calc(50% + .5px); transform: translate(-50%, -50%) scale(var(--k, 1));
+    width: 423px; height: 481px; background: var(--paper); overflow: hidden; }
+  .gate-card .lines { position: absolute; left: 0; top: 24px; }
+  .gate-card .red { position: absolute; left: 41px; top: -9px; transform-origin: 0 0; transform: rotate(90deg); }
+  .gate-card .hand { position: absolute; font-family: 'Caveat', cursive; font-size: 17px; letter-spacing: -.2px; color: #4b4b4b; white-space: nowrap; }
+  .gate-card .hi { left: calc(50% - 124.5px); top: 56px; line-height: 11px; }
+  .gate-card .faces { position: absolute; left: calc(50% + .5px); top: 91px; transform: translateX(-50%); display: flex; gap: 10px; }
+  .gate-card .faces img { display: block; border-radius: 50%; }
+  .gate-card .thanks { left: 50%; top: 220px; transform: translateX(-50%); line-height: 24px; text-align: center; }
+  .gate-card .code { position: absolute; left: 50%; top: 291px; transform: translateX(-50%); display: flex; gap: 9px; }
+  .gate-card .code input { width: 49px; height: 65px; background: #fff; border: 2px solid var(--paper); border-radius: 4px; outline: none;
+    font: 16px Inter, sans-serif; letter-spacing: -.96px; text-align: center; color: var(--ink); text-transform: uppercase; padding: 0; }
+  .gate-card .code input::placeholder { color: rgba(75,75,75,.2); }
+  .gate-card .code input:focus { border-color: var(--ink); }
+  .gate-card.wrong .code input { border-color: var(--rough); animation: shake .3s; }
+  @keyframes shake { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+  .gate-card .err { position: absolute; left: 0; right: 0; top: 361px; text-align: center; font-size: 11px; letter-spacing: -.3px; color: var(--rough); }
+  .gate-card .go { position: absolute; left: 50%; top: 384px; transform: translateX(-50%); width: 107px; height: 42px; border: 0; border-radius: 4px;
+    background: #000; color: #fff; font: 14px/24px Inter, sans-serif; cursor: pointer; transition: opacity .15s; }
+  .gate-card .go:disabled { opacity: .5; cursor: default; }
+
   /* ---------- onboarding tour ---------- */
   .tour { position: fixed; inset: 0; z-index: 30; }
   .tour-spot { position: fixed; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,.6); transition: all .3s ease; pointer-events: none; }
@@ -441,6 +466,24 @@
   </div>
 </div>
 
+<div class="gate" id="gate" hidden>
+  <form class="gate-card" id="gateForm" role="dialog" aria-labelledby="gateHi" autocomplete="off">
+    <img class="lines" src="assets/lined-paper.svg" alt="" width="481" height="457">
+    <img class="red" src="assets/margin-line.svg" alt="" width="498" height="1">
+    <p class="hand hi" id="gateHi">Hi! We are Medhavi and Vanshika</p>
+    <div class="faces"><img src="assets/researcher-1.png" alt="Medhavi" width="92" height="92"><img src="assets/researcher-2.png" alt="Vanshika" width="92" height="92"></div>
+    <div class="hand thanks"><p>Thank you for participating in our study.</p><p>Please enter your access code to get started.</p></div>
+    <div class="code" role="group" aria-label="Access code">
+      <input maxlength="1" placeholder="X" aria-label="Letter 1" autocapitalize="characters" spellcheck="false">
+      <input maxlength="1" placeholder="X" aria-label="Letter 2" autocapitalize="characters" spellcheck="false">
+      <input maxlength="1" placeholder="X" aria-label="Letter 3" autocapitalize="characters" spellcheck="false">
+      <input maxlength="1" placeholder="X" aria-label="Letter 4" autocapitalize="characters" spellcheck="false">
+    </div>
+    <p class="err" id="gateErr" role="alert"></p>
+    <button class="go" type="submit">Get Started</button>
+  </form>
+</div>
+
 <div class="annot" id="annot" role="dialog" aria-label="Draw on this item" hidden>
   <div class="annot-card">
     <div class="annot-stage" id="annotStage"></div>
@@ -537,7 +580,11 @@
   // answers are kept in this browser's localStorage instead.
   const SUPA_URL = 'https://hekiwayvwkjgqrgfeull.supabase.co';
   const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhla2l3YXl2d2tqZ3FyZ2ZldWxsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyMjExNTQsImV4cCI6MjEwODc5NzE1NH0.6IoaLRcHQYXXxsX7IeDrGceFmNICTnhxCoDtdm2Fi_I';
-  const TOKEN = new URLSearchParams(location.search).get('t');
+  // A participant gets in with their link (?t=<token>) or, the first time, by typing their access code,
+  // which is swapped for the token and remembered in this browser
+  let storedToken = null;
+  try { storedToken = localStorage.getItem('diary-token'); } catch {}
+  const TOKEN = new URLSearchParams(location.search).get('t') || storedToken;
   const AUTH = { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` };
 
   let saved = {};
@@ -1229,6 +1276,43 @@
   contactBtn.onclick = () => setContact(contactCard.hidden);
   addEventListener('pointerdown', e => { if (!e.target.closest('.contact')) setContact(false); });
 
+  // ---------- access code ----------
+  const gate = document.getElementById('gate'), gateForm = document.getElementById('gateForm');
+  const boxes = [...gateForm.querySelectorAll('.code input')];
+  if (!TOKEN) { gate.hidden = false; boxes[0].focus(); }
+  const setErr = msg => { document.getElementById('gateErr').textContent = msg; gateForm.classList.toggle('wrong', !!msg); };
+  gateForm.addEventListener('input', e => {
+    const i = boxes.indexOf(e.target);
+    if (i < 0) return;
+    // typing or pasting fills the boxes from here on, letters only
+    const letters = e.target.value.toUpperCase().replace(/[^A-Z]/g, '');
+    [...letters].slice(0, 4 - i).forEach((c, n) => { boxes[i + n].value = c; });
+    if (!letters) e.target.value = '';
+    boxes[Math.min(3, i + letters.length)].focus();
+    setErr('');
+  });
+  gateForm.addEventListener('keydown', e => {
+    const i = boxes.indexOf(e.target);
+    if (e.key === 'Backspace' && i > 0 && !e.target.value) boxes[i - 1].focus();
+  });
+  gateForm.addEventListener('submit', async e => {
+    e.preventDefault();
+    const code = boxes.map(b => b.value).join('');
+    if (code.length < 4) return setErr('Please enter all 4 letters.');
+    const btn = gateForm.querySelector('.go');
+    btn.disabled = true;
+    try {
+      const res = await fetch(`${SUPA_URL}/rest/v1/rpc/redeem_access_code`, { method: 'POST',
+        headers: { ...AUTH, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_code: code }) });
+      const token = res.ok ? await res.json() : null;
+      if (!token) { setErr('That code doesn’t match. Check it and try again.'); boxes.forEach(b => b.value = ''); boxes[0].focus(); return; }
+      try { localStorage.setItem('diary-token', token); } catch {}
+      location.replace(location.pathname + '?t=' + encodeURIComponent(token)); // also keeps them in if storage is blocked
+    } catch {
+      setErr('Couldn’t connect. Check your internet and try again.');
+    } finally { btn.disabled = false; }
+  });
+
   // ---------- onboarding tour ----------
   // Plays the first time someone opens the diary, and again from the ? button. Steps that point at
   // day or rough pages turn to that spread first.
@@ -1303,6 +1387,7 @@
   });
 
   addEventListener('keydown', e => {
+    if (!gate.hidden) return;
     if (!tour.hidden) {
       if (e.key === 'Escape') endTour();
       if (e.key === 'ArrowRight') tourAt === tourSteps.length - 1 ? endTour() : showTour(tourAt + 1);
@@ -1321,6 +1406,7 @@
   const fit = () => {
     const k = Math.min(innerWidth / 1280, innerHeight / 832);
     document.getElementById('frame').style.transform = `translate(-50%, -50%) scale(${k})`;
+    document.documentElement.style.setProperty('--k', k);
   };
   addEventListener('resize', fit);
   fit();
