@@ -1710,13 +1710,16 @@
     e.preventDefault();
     const code = boxes.map(b => b.value).join('');
     if (code.length < 4) return setErr('Please enter all 4 letters.');
+    // the code is a second factor: it only opens the diary whose link was used
+    const linkToken = new URLSearchParams(location.search).get('t') || store1(localStorage, 'diary-token');
+    if (!linkToken) return setErr('Open the diary link your researcher sent you, then enter your code.');
     const btn = gateForm.querySelector('.go');
     btn.disabled = true;
     try {
       const res = await fetch(`${SUPA_URL}/rest/v1/rpc/redeem_access_code`, { method: 'POST',
-        headers: { ...AUTH, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_code: code }) });
+        headers: { ...AUTH, 'Content-Type': 'application/json' }, body: JSON.stringify({ p_code: code, p_token: linkToken }) });
       const token = res.ok ? await res.json() : null;
-      if (!token) { setErr('That code doesn’t match. Check it and try again.'); boxes.forEach(b => b.value = ''); boxes[0].focus(); return; }
+      if (!token) { setErr('Incorrect passcode.'); boxes.forEach(b => b.value = ''); boxes[0].focus(); return; }
       store1(localStorage, 'diary-token', token);
       store1(sessionStorage, 'diary-unlocked', '1');
       store1(localStorage, 'diary-welcomed', '1');
