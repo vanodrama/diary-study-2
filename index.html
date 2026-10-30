@@ -26,6 +26,7 @@
   body { display: grid; place-items: center; font-family: Inter, sans-serif; }
 
   /* Design frame is 1280×832; scaled to fit the window so the page never scrolls */
+  html.zoomed { overflow: auto; } html.zoomed body { overflow: visible; }
   #frame { position: absolute; left: 50%; top: 50%; width: 1280px; height: 832px; perspective: 2400px; }
 
   .mono { font-family: 'Fira Code', monospace; font-size: 10px; letter-spacing: .5px; color: #000; }
@@ -323,6 +324,7 @@
   .contact-btn { width: 40px; height: 40px; border-radius: 43.75px; border: 0; background: var(--paper);
     display: grid; place-items: center; cursor: pointer; box-shadow: 2.5px 2.5px 7.5px rgba(0,0,0,.25); transition: transform .15s; }
   .contact-btn:hover { transform: scale(1.08); }
+  #tourBtn { color: var(--ink); }
   .contact-btn:focus-visible, .contact-send:focus-visible { outline: 2px solid var(--intro); outline-offset: 2px; }
   .contact-card { width: 248px; background: var(--paper); color: var(--ink); padding: 16px 16px 14px;
     box-shadow: 2.5px 2.5px 12px rgba(0,0,0,.35); font-size: 12px; letter-spacing: -.3px; line-height: 1.45;
@@ -596,6 +598,7 @@
       </ul>
       <a class="contact-send" href="mailto:vkumar438@gatech.edu,msabherwal3@gatech.edu?subject=Diary%20study%20question">Send email</a>
     </div>
+    <button class="contact-btn" id="tourBtn" aria-label="Replay the tour" title="Replay the tour"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.75 12a8.25 8.25 0 1 0 2.42-5.83L3.75 8.6"/><path d="M3.75 3.75V8.6H8.6"/><path d="M10.5 9l4.5 3-4.5 3z"/></svg></button>
     <button class="contact-btn" id="helpBtn" aria-label="See today’s task" title="See today’s task"><img src="assets/icon-question.svg" alt="" width="24" height="24"></button>
     <button class="contact-btn" id="contactBtn" aria-label="Contact the researchers" aria-expanded="false">
       <img src="assets/icon-envelope.svg" alt="" width="24" height="24">
@@ -1771,7 +1774,7 @@
     { sec: 'day', sel: '.page-count', title: 'Pages within a day', text: 'Each day has a question spread followed by rough pages. This shows which page of the day you’re on.' },
     { sec: 'dayr', sel: '#binder', title: 'Rough pages are a canvas', text: 'Jot notes, then drag screenshots, videos, files and notes anywhere, even onto the facing page. Pull an item’s corner to resize it, and ✎ to draw on an image or video.' },
     { sec: 'dayr', sel: '#fab', title: 'Add things', text: 'Use + to add an image, file, video, sticky note, or a whole new rough page.', open: true },
-    { sel: '#helpBtn', title: 'You’re all set', text: 'Tap ? any time to see the day’s task, or email your researchers with the envelope button.' },
+    { sel: '#helpBtn', title: 'You’re all set', text: 'Tap ? any time to see the day’s task, ↻ to replay this tour, or email your researchers with the envelope button.' },
   ];
   const tour = document.getElementById('tour'), tourSpot = document.getElementById('tourSpot'), tourCard = document.getElementById('tourCard');
   let tourAt = -1;
@@ -1826,6 +1829,7 @@
     if (t === 'next') tourAt === tourSteps.length - 1 ? endTour() : showTour(tourAt + 1);
   };
   addEventListener('resize', () => { if (!tour.hidden) showTour(tourAt); });
+  document.getElementById('tourBtn').onclick = () => { setContact(false); hideTask(); startTour(); };
   // ? shows the task for the day on screen, or the latest day that has opened
   document.getElementById('helpBtn').onclick = () => {
     setContact(false);
@@ -1867,12 +1871,38 @@
     if (e.key === 'Escape') go(-1);
   });
 
-  // Scale the 1280×832 design frame to the window
+  // Scale the 1280×832 design frame to the window, times the reader's own zoom (Cmd/Ctrl + − 0).
+  // Zoomed in past the window, the page scrolls to reach the rest of the diary.
+  const ZOOMS = [.5, .67, .8, .9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
+  let zoom = +store1(localStorage, 'diary-zoom') || 1;
   const fit = () => {
-    const k = Math.min(innerWidth / 1280, innerHeight / 832);
-    document.getElementById('frame').style.transform = `translate(-50%, -50%) scale(${k})`;
+    const k = Math.min(innerWidth / 1280, innerHeight / 832) * zoom;
+    const W = 1280 * k, H = 832 * k;
+    Object.assign(document.getElementById('frame').style, {
+      transform: `scale(${k})`, transformOrigin: '0 0',
+      left: Math.max(0, (innerWidth - W) / 2) + 'px', top: Math.max(0, (innerHeight - H) / 2) + 'px' });
+    document.documentElement.classList.toggle('zoomed', W > innerWidth + 1 || H > innerHeight + 1);
     document.documentElement.style.setProperty('--k', k);
   };
+  function setZoomLevel(z) {
+    const root = document.scrollingElement, old = zoom;
+    // keep the middle of the window on the same spot of the diary
+    const cx = (root.scrollLeft + innerWidth / 2) / old, cy = (root.scrollTop + innerHeight / 2) / old;
+    zoom = z;
+    store1(localStorage, 'diary-zoom', String(z));
+    fit();
+    root.scrollLeft = cx * z - innerWidth / 2;
+    root.scrollTop = cy * z - innerHeight / 2;
+  }
+  addEventListener('keydown', e => {
+    if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+    const i = ZOOMS.indexOf(zoom), at = i < 0 ? ZOOMS.indexOf(1) : i;
+    if (e.key === '=' || e.key === '+') setZoomLevel(ZOOMS[Math.min(ZOOMS.length - 1, at + 1)]);
+    else if (e.key === '-' || e.key === '_') setZoomLevel(ZOOMS[Math.max(0, at - 1)]);
+    else if (e.key === '0') setZoomLevel(1);
+    else return;
+    e.preventDefault();
+  });
   addEventListener('resize', fit);
   fit();
 </script>
