@@ -752,9 +752,10 @@
     return text ? JSON.parse(text) : null;
   }
 
+  let settingsLoaded = Promise.resolve();
   if (TOKEN) {
     document.body.classList.add('ms-pending');
-    rpc('load_my_settings', {})
+    settingsLoaded = rpc('load_my_settings', {})
       .then(rows => {
         document.body.classList.toggle('no-ms', !!rows?.[0]?.hide_microsoft_logo);
         if (rows?.[0]?.partner_logo) document.body.classList.add(`logo-${rows[0].partner_logo}`);
@@ -1813,6 +1814,7 @@
     tourAt = -1;
     closeMenu();
     try { localStorage.setItem('diary-tour-done', '1'); } catch {}
+    if (!store1(sessionStorage, 'diary-landed')) openToday();
   }
   tourCard.onclick = e => {
     const t = e.target.closest('[data-t]')?.dataset.t;
@@ -1833,6 +1835,16 @@
     params.delete('welcome');
     history.replaceState(null, '', location.pathname + (params.size ? '?' + params : ''));
     ready.then(() => { go(0); setTimeout(startTour, 1600); });
+  } else if (TOKEN && !store1(sessionStorage, 'diary-landed')) openToday();
+  // Once per session, after the code is entered, the diary opens on today's day with its task showing
+  function openToday() {
+    store1(sessionStorage, 'diary-landed', '1');
+    Promise.all([ready, settingsLoaded.catch(() => {})]).then(() => {
+      const day = openDay ?? 1, i = sections.findIndex(s => s.id === 'd' + day);
+      if (!day || i < 0) return;
+      go(i);
+      setTimeout(() => { if (task.hidden && tour.hidden) showTask(day); }, 1600);
+    });
   }
 
   addEventListener('keydown', e => {
