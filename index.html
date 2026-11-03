@@ -114,7 +114,9 @@
   /* page count and a reminder along the bottom of the binder */
   .binder-foot { position: absolute; left: 0; right: 0; top: 572px; font-size: 14px; letter-spacing: -.84px; color: #1b1b1b; white-space: nowrap; }
   .binder-foot .page-count { position: absolute; left: 69px; transform: translateX(-50%); }
-  .binder-foot .foot-hint { position: absolute; right: 28px; }
+  .binder-foot .foot-hint { position: absolute; right: 28px; border: 0; padding: 0; background: none; font: inherit; letter-spacing: inherit; color: inherit; }
+  #binder:not(.is-intro) .foot-hint { cursor: pointer; }
+  #binder:not(.is-intro) .foot-hint:hover { text-decoration: underline; text-underline-offset: 3px; }
   #binder.is-intro .binder-foot .foot-hint { right: auto; left: 50%; transform: translateX(-50%); }
   /* round ‹ › on the binder's sides */
   .side-nav { position: absolute; top: calc(50% - 6px); transform: translateY(-50%); z-index: 7; width: 40px; height: 40px; border-radius: 43.75px;
@@ -606,7 +608,7 @@
     <button class="edge next" id="edgeNext" aria-label="Next page"><span>›</span></button>
     <button class="side-nav" id="prev" aria-label="Previous page"><img src="assets/icon-caret-prev.svg" alt="" width="24" height="24"></button>
     <button class="side-nav" id="next" aria-label="Next page"><img src="assets/icon-caret-next.svg" alt="" width="24" height="24"></button>
-    <div class="binder-foot"><p class="page-count" id="pageCount" aria-live="polite"></p><p class="foot-hint" id="footHint"></p>
+    <div class="binder-foot"><p class="page-count" id="pageCount" aria-live="polite"></p><button class="foot-hint" id="footHint"></button>
       <button class="submit-diary" id="submitDiary" hidden>Submit diary</button></div>
     <div class="fab-menu" id="fabMenu" hidden>
       <button data-pick="image"><img src="assets/icon-image.svg" alt="" width="16" height="16">Image</button>
@@ -1129,8 +1131,9 @@
     const s = sections[current];
     const group = s ? sections.filter(x => x.tab === s.tab) : [];
     pageCount.textContent = !s || s.kind === 'intro' ? '' : `Page ${group.indexOf(s) + 1} of ${group.length}`;
+    // Figma 57:2732 / 57:2912: the reminder doubles as a shortcut
     document.getElementById('footHint').textContent = !s ? '' : s.kind === 'intro' ? 'Please hover over each element to learn more'
-      : s.kind === 'rough' && s.day ? 'Don’t forget to add your rough notes for the day' : 'Don’t forget to add your rough notes here';
+      : s.kind === 'day' ? 'Add your rough notes on the next page' : 'Need more space? Add another rough page';
     binder.classList.toggle('is-intro', s?.kind === 'intro');
     document.getElementById('submitDiary').hidden = s?.day !== 5;
   }
@@ -1138,6 +1141,13 @@
   // "ralston" shows as "Ralston’s Diary"
   const drawName = () => { const n = (saved.name || '').trim(); diaryName.textContent = n ? `${n[0].toUpperCase() + n.slice(1)}’s Diary` : 'Your Diary'; };
   ready.then(drawName);
+
+  // questions page: turn to the day's rough page; rough page: add another one
+  document.getElementById('footHint').onclick = () => {
+    const s = sections[current];
+    if (s?.kind === 'day') go(current + 1);
+    else if (s?.kind === 'rough') addRoughPage();
+  };
 
   // Adds a rough spread at the end of the current day (or of the back Rough section) and opens it
   function addRoughPage() {
