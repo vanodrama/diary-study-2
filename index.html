@@ -191,15 +191,17 @@
   #cover > .rear { left: -3.5px; width: 466.5px; background: var(--intro); transform: rotateY(180deg); }
   #cover > .rear > .slot { position: absolute; left: 28px; top: 19px; width: 432px; height: 527px; }
   #cover .holes { left: 7px; top: calc(50% - 12px); --hole: #1b1b1b; }
-  #cover .margin { left: 24px; top: 8px; height: 577px; }
-  #cover .hr { position: absolute; left: 25px; width: 439px; height: 1px; background: var(--rule); }
+  /* full-height rules at the binding edge and near the outer edge */
+  #cover .margin { left: 24px; top: 0; height: 100%; }
+  #cover .margin.outer { left: 446px; }
+  #cover .hr { position: absolute; left: 25px; width: 441px; height: 1px; background: var(--rule); }
   /* Figma 60:5987 */
   .title { position: absolute; left: 180px; top: 185px; white-space: nowrap;
     font-size: 50px; letter-spacing: -3px; line-height: 1.21; color: #000; }
   .title span { display: block; margin-bottom: -11.5px; }
   #cover .gt { position: absolute; left: 180px; top: 296px; width: 48px; height: 27px; object-fit: cover; }
   #cover .ms { position: absolute; left: 239px; top: 298.5px; width: 67px; height: 22px; object-fit: cover; }
-  #cover .foot { position: absolute; top: 579px; font-size: 11px; letter-spacing: .55px; }
+  #cover .foot { position: absolute; top: 584px; font-size: 11px; letter-spacing: .11px; }
 
   /* Opening: cover slides right until its edge sits on the spine (+226px), then swings over it.
      Closing plays the same steps backwards. */
@@ -563,13 +565,14 @@
    <div class="side front">
     <div class="holes"></div>
     <div class="margin"></div>
-    <div class="hr" style="top:30px"></div>
-    <div class="hr" style="top:571px"></div>
+    <div class="margin outer"></div>
+    <div class="hr" style="top:20px"></div>
+    <div class="hr" style="top:574px"></div>
     <div class="title"><span>Diary</span>Study</div>
     <img class="gt" src="assets/georgia-tech.png" alt="Georgia Tech">
     <img class="ms" src="assets/microsoft.png" alt="Microsoft">
-    <p class="mono foot" id="studyDates" style="left:40px">[ Nov XX - Nov XX ]</p>
-    <p class="mono foot" style="left:391px">[ 2026 ]</p>
+    <p class="mono foot" id="studyDates" style="left:44px">[ Nov XX - Nov XX ]</p>
+    <p class="mono foot" style="left:372px">[ 2026 ]</p>
     <i class="shade"></i>
    </div>
    <div class="side rear"><div class="slot" id="coverInside"></div><i class="shade"></i></div>
