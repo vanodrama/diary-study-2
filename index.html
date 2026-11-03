@@ -474,6 +474,27 @@
     background: #000; color: #fff; font: 14px/24px Inter, sans-serif; cursor: pointer; transition: opacity .15s; }
   .gate-card .go:disabled { opacity: .5; cursor: default; }
 
+  /* ---------- Day 5 submit + completion note ---------- */
+  .binder-foot .submit-diary { position: absolute; right: 28px; top: -7px; height: 32px; padding: 0 16px; border: 0; border-radius: 4px;
+    background: #000; color: #fff; font: 14px Inter, sans-serif; letter-spacing: -.42px; cursor: pointer; transition: transform .15s; }
+  .binder-foot .submit-diary:hover { transform: scale(1.04); }
+  .binder-foot .submit-diary.sent { background: transparent; color: #1b1b1b; border: 1px solid #1b1b1b; }
+  .binder-foot .submit-diary:not([hidden]) ~ .foot-hint, .binder-foot:has(.submit-diary:not([hidden])) .foot-hint { display: none; }
+  .done { position: fixed; inset: 0; z-index: 42; background: rgba(0,0,0,.3); backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); }
+  .done-card { position: absolute; left: 50%; top: 50%; width: 423px; height: 264px; background: var(--paper); overflow: hidden;
+    transform: translate(-50%, -50%) scale(var(--k, 1)); animation: doneIn .45s var(--ease); }
+  @keyframes doneIn { from { opacity: 0; transform: translate(-50%, -46%) scale(calc(var(--k, 1) * .96)); } }
+  .done-card .lines { position: absolute; left: 0; top: 24px; }
+  .done-card .red { position: absolute; left: 41px; top: -9px; transform-origin: 0 0; transform: rotate(90deg); }
+  /* every line of text sits in one 24px band of the ruled paper (rules at 24, 48, 72 … from the top) */
+  .done-card h3 { position: absolute; left: 50%; top: 48px; width: 320px; transform: translateX(-42%); text-align: center;
+    font-size: 22px; font-weight: 700; letter-spacing: -1.1px; color: #4b4b4b; line-height: 24px; }
+  .done-card p { position: absolute; left: 50%; top: 96px; width: 320px; transform: translateX(-42%); text-align: center;
+    font-size: 15px; line-height: 24px; letter-spacing: -.6px; color: #4b4b4b; }
+  .done-card .go { position: absolute; left: 50%; top: 195px; transform: translateX(-38%); width: 107px; height: 42px; border: 0; border-radius: 4px;
+    background: #000; color: #fff; font: 14px Inter, sans-serif; cursor: pointer; }
+  .confetti { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 43; pointer-events: none; }
+
   /* ---------- today's task (Figma 40:1179): a note over the blurred diary when a day opens ---------- */
   .task { position: absolute; left: -2000px; top: -2000px; width: 5280px; height: 4832px; z-index: 18;
     background: rgba(0,0,0,.3); backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); cursor: pointer; }
@@ -585,7 +606,8 @@
     <button class="edge next" id="edgeNext" aria-label="Next page"><span>›</span></button>
     <button class="side-nav" id="prev" aria-label="Previous page"><img src="assets/icon-caret-prev.svg" alt="" width="24" height="24"></button>
     <button class="side-nav" id="next" aria-label="Next page"><img src="assets/icon-caret-next.svg" alt="" width="24" height="24"></button>
-    <div class="binder-foot"><p class="page-count" id="pageCount" aria-live="polite"></p><p class="foot-hint" id="footHint"></p></div>
+    <div class="binder-foot"><p class="page-count" id="pageCount" aria-live="polite"></p><p class="foot-hint" id="footHint"></p>
+      <button class="submit-diary" id="submitDiary" hidden>Submit diary</button></div>
     <div class="fab-menu" id="fabMenu" hidden>
       <button data-pick="image"><img src="assets/icon-image.svg" alt="" width="16" height="16">Image</button>
       <button data-pick="file"><img src="assets/icon-file.svg" alt="" width="16" height="16">File</button>
@@ -660,6 +682,17 @@
     <button class="go" type="submit">Get Started</button>
   </form>
 </div>
+
+<div class="done" id="done" role="dialog" aria-labelledby="doneTitle" hidden>
+  <div class="done-card">
+    <img class="lines" src="assets/lined-paper.svg" alt="" width="481" height="457">
+    <img class="red" src="assets/margin-line.svg" alt="" width="498" height="1">
+    <h3 id="doneTitle">Yay! The diary is now complete!</h3>
+    <p>Medhavi and Vanshika will be notified, and you’ll receive an email for a paired interview in the following week!</p>
+    <button class="go" id="doneClose">Close</button>
+  </div>
+</div>
+<canvas class="confetti" id="confetti" aria-hidden="true"></canvas>
 
 <div class="annot" id="annot" role="dialog" aria-labelledby="annotTitle" hidden>
   <div class="annot-card">
@@ -799,6 +832,7 @@
       .then(rows => {
         // partner_logo is 'microsoft' or 'google'; Microsoft's logo is the default in the markup
         if (rows?.[0]?.partner_logo === 'google') document.body.classList.add('logo-google');
+        if (rows?.[0]?.submitted_at) markSubmitted();
         const { start_date: start, end_date: end } = rows?.[0] || {};
         if (start && end) document.getElementById('studyDates').textContent = `[ ${shortDate(start)} - ${shortDate(end)} ]`;
         if (start) unlockFrom(start);
@@ -1098,6 +1132,7 @@
     document.getElementById('footHint').textContent = !s ? '' : s.kind === 'intro' ? 'Please hover over each element to learn more'
       : s.kind === 'rough' && s.day ? 'Don’t forget to add your rough notes for the day' : 'Don’t forget to add your rough notes here';
     binder.classList.toggle('is-intro', s?.kind === 'intro');
+    document.getElementById('submitDiary').hidden = s?.day !== 5;
   }
   const diaryName = document.getElementById('diaryName');
   // "ralston" shows as "Ralston’s Diary"
@@ -1805,6 +1840,55 @@
   });
   binder.addEventListener('click', e => { const t = e.target.closest('[data-task]'); if (t) showTask(+t.dataset.task); });
 
+  // ---------- Day 5: submit the diary ----------
+  // Records the submission (participants.submitted_at), then celebrates. Submitting again just
+  // updates the time.
+  const submitBtn = document.getElementById('submitDiary'), done = document.getElementById('done');
+  function markSubmitted() { submitBtn.classList.add('sent'); submitBtn.textContent = 'Diary submitted ✓'; }
+  submitBtn.onclick = async () => {
+    submitBtn.disabled = true;
+    try {
+      if (TOKEN) await rpc('submit_diary', {});
+      markSubmitted();
+      done.hidden = false;
+      document.getElementById('doneClose').focus();
+      confetti();
+    } catch (e) {
+      console.warn('submit failed', e);
+      alert('Couldn’t submit your diary. Check your connection and try again.');
+    } finally { submitBtn.disabled = false; }
+  };
+  done.addEventListener('click', e => { if (e.target === done || e.target.id === 'doneClose') done.hidden = true; });
+
+  // Confetti bursts up and inward from the bottom-left and bottom-right corners
+  function confetti() {
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const cv = document.getElementById('confetti'), ctx = cv.getContext('2d'), dpr = devicePixelRatio || 1;
+    cv.width = innerWidth * dpr; cv.height = innerHeight * dpr;
+    ctx.scale(dpr, dpr);
+    const colors = ['#8aa5db', '#e6c0d2', '#e8da5c', '#4fae5c', '#e0832e', '#9e8fd8', '#d1233d'];
+    const bits = [];
+    for (const side of [-1, 1]) for (let n = 0; n < 90; n++) {
+      const a = (side < 0 ? -60 : -120) * Math.PI / 180 + (Math.random() - .5) * .7, v = 12 + Math.random() * 10;
+      bits.push({ x: side < 0 ? 0 : innerWidth, y: innerHeight, vx: Math.cos(a) * v, vy: Math.sin(a) * v,
+        w: 6 + Math.random() * 6, h: 4 + Math.random() * 4, r: Math.random() * 6, vr: (Math.random() - .5) * .4,
+        c: colors[n % colors.length] });
+    }
+    const t0 = performance.now();
+    const frame = now => {
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+      const fade = Math.max(0, 1 - (now - t0 - 2500) / 1000);
+      for (const b of bits) {
+        b.vx *= .985; b.vy = b.vy * .985 + .35; b.x += b.vx; b.y += b.vy; b.r += b.vr;
+        ctx.save(); ctx.globalAlpha = fade; ctx.translate(b.x, b.y); ctx.rotate(b.r);
+        ctx.fillStyle = b.c; ctx.fillRect(-b.w / 2, -b.h / 2, b.w, b.h * Math.abs(Math.cos(b.r * 2))); ctx.restore();
+      }
+      if (fade > 0) requestAnimationFrame(frame);
+      else ctx.clearRect(0, 0, innerWidth, innerHeight);
+    };
+    requestAnimationFrame(frame);
+  }
+
   // ---------- onboarding tour ----------
   // Plays the first time someone opens the diary, and again from the ? button. Each step can turn to
   // a spread (sec: 'cover' closes the diary) and set up what it shows (setup). Hands-on steps wait
@@ -2067,6 +2151,7 @@
 
   addEventListener('keydown', e => {
     if (!gate.hidden) return;
+    if (!done.hidden) { if (e.key === 'Escape') done.hidden = true; return; }
     if (!task.hidden) { if (e.key === 'Escape') hideTask(); return; }
     if (!tour.hidden) {
       if (e.key === 'Escape') endTour();
