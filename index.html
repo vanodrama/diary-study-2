@@ -193,12 +193,13 @@
   #cover .holes { left: 7px; top: calc(50% - 12px); --hole: #1b1b1b; }
   #cover .margin { left: 24px; top: 8px; height: 577px; }
   #cover .hr { position: absolute; left: 25px; width: 439px; height: 1px; background: var(--rule); }
-  .title { position: absolute; left: calc(50% + .5px); top: calc(50% - 50px); transform: translate(-50%, -50%);
-    width: 101px; font-size: 40px; letter-spacing: -2.4px; line-height: 1.21; color: #000; }
-  .title span { display: block; margin-bottom: -7px; }
-  #cover .gt { position: absolute; left: 183px; top: 297px; width: 38px; height: 21px; object-fit: cover; }
-  #cover .ms { position: absolute; left: 229px; top: 293px; width: 52px; height: 29px; object-fit: cover; }
-  #cover .foot { position: absolute; top: 579px; font-size: 9px; letter-spacing: .45px; }
+  /* Figma 60:5987 */
+  .title { position: absolute; left: 170px; top: 235px; white-space: nowrap;
+    font-size: 50px; letter-spacing: -3px; line-height: 1.21; color: #000; }
+  .title span { display: block; margin-bottom: -11.5px; }
+  #cover .gt { position: absolute; left: 170px; top: 346px; width: 48px; height: 27px; object-fit: cover; }
+  #cover .ms { position: absolute; left: 229px; top: 348.5px; width: 67px; height: 22px; object-fit: cover; }
+  #cover .foot { position: absolute; top: 579px; font-size: 11px; letter-spacing: .55px; }
 
   /* Opening: cover slides right until its edge sits on the spine (+226px), then swings over it.
      Closing plays the same steps backwards. */
@@ -568,7 +569,7 @@
     <img class="gt" src="assets/georgia-tech.png" alt="Georgia Tech">
     <img class="ms" src="assets/microsoft.png" alt="Microsoft">
     <p class="mono foot" id="studyDates" style="left:40px">[ Nov XX - Nov XX ]</p>
-    <p class="mono foot" style="left:405px">[ 2026 ]</p>
+    <p class="mono foot" style="left:391px">[ 2026 ]</p>
     <i class="shade"></i>
    </div>
    <div class="side rear"><div class="slot" id="coverInside"></div><i class="shade"></i></div>
