@@ -66,8 +66,8 @@
   .qs.day section { height: 160px; padding: 8px 9px 0; }
   .page.l .qs.day section:first-child { height: 208px; }
   .page.l .qs.day section:last-child { height: 193px; }
-  .qs.day .q { font-size: 12px; letter-spacing: -.72px; color: var(--ink); }
-  .qs.day textarea { font-size: 10px; line-height: 1.45; letter-spacing: -.6px; }
+  .qs.day .q { font-size: 13px; letter-spacing: -.78px; color: var(--ink); }
+  .qs.day textarea { font-size: 13px; line-height: 1.45; letter-spacing: -.39px; }
 
   /* rough work grid */
   .grid { position: absolute; top: 37px; width: 393px; height: 471px; border: 1px solid #cfd0cb;
@@ -487,9 +487,7 @@
     font-weight: 700; font-size: 24px; line-height: 24px; letter-spacing: -1.44px; color: #4b4b4b; }
   .task-card .details { position: absolute; left: 227.5px; top: 146px; width: 315px; transform: translateX(-50%); text-align: center;
     font-size: 16px; line-height: 24px; letter-spacing: -.96px; color: #4b4b4b; }
-  .task-card .tip { position: absolute; left: 230.5px; top: 408px; width: 305px; transform: translateX(-50%); text-align: center;
-    font-size: 14px; line-height: 24px; letter-spacing: -.84px; color: rgba(75,75,75,.4); }
-  .task-card .shut { position: absolute; right: 13px; top: 10px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--paper); cursor: pointer;
+  .task-card .shut { position: absolute; right: 13px; top: 10px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: #fff; cursor: pointer; outline: none;
     display: grid; place-items: center; box-shadow: 2px 2px 6px rgba(0,0,0,.25); z-index: 2; }
 
   /* ---------- onboarding tour ---------- */
@@ -618,7 +616,6 @@
         <button id="taskNext" aria-label="Next day’s task"><img src="assets/icon-caret-round-next.svg" alt="" width="20" height="20" style="transform:rotate(-90deg)"></button>
       </div>
       <h3 id="taskTitle"></h3><p class="details" id="taskText"></p>
-      <p class="tip" id="taskTip"></p>
     </div>
   </div>
 
@@ -1793,7 +1790,6 @@
     document.getElementById('taskNext').disabled = day >= lastOpenDay();
     document.getElementById('taskTitle').textContent = d.title;
     document.getElementById('taskText').textContent = d.task;
-    document.getElementById('taskTip').textContent = d.tip ? `Tip: ${d.tip}` : '';
     task.hidden = false;
     document.getElementById('taskClose').focus();
   }
