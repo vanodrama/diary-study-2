@@ -8,6 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
+    --ease: cubic-bezier(.2, .7, .2, 1);
     --bg: #1b1b1b;
     --paper: #f0f1eb;
     --rule: #d6d7d1;
@@ -273,6 +274,8 @@
     display: flex; justify-content: center; white-space: nowrap; }
 
   [hidden] { display: none !important; }
+  /* Figma 57:4219 / 57:4296: nothing but the login card while the code is asked for */
+  body:has(#gate:not([hidden])) .contact { display: none; }
 
   /* ---------- media ---------- */
   .media-layer { position: absolute; inset: 0; pointer-events: none; }
@@ -489,9 +492,22 @@
 
   /* ---------- onboarding tour ---------- */
   .tour { position: fixed; inset: 0; z-index: 30; }
-  .tour-spot { position: fixed; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,.6); transition: all .3s ease; pointer-events: none; }
+  .tour.above { z-index: 45; }
+  /* one ease for every move; the highlight glides and resizes, the card follows and cross-fades */
+  .tour-spot { position: fixed; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,.6); pointer-events: none;
+    transition: left .45s var(--ease), top .45s var(--ease), width .45s var(--ease), height .45s var(--ease), opacity .25s ease; }
   .tour-card { position: fixed; width: 280px; background: var(--paper); color: var(--ink); padding: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.4);
-    font-size: 13px; line-height: 1.45; letter-spacing: -.3px; transition: left .3s ease, top .3s ease; }
+    font-size: 13px; line-height: 1.45; letter-spacing: -.3px; transition: left .45s var(--ease), top .45s var(--ease); }
+  .tour-card h3, .tour-card p { transition: opacity .2s ease, transform .2s ease; }
+  .tour-card.swap h3, .tour-card.swap p { opacity: 0; transform: translateY(4px); }
+  .tour:not([hidden]) .tour-card { animation: menuIn .3s var(--ease); }
+  /* the tour's pretend hover on a sticker, and its pretend tap on Image */
+  .sticker.demo img { transform: scale(1.08) rotate(-2deg); }
+  .sticker.demo .tip { opacity: 1; transform: none; }
+  .fab-menu button.demo { background: rgba(0,0,0,.08); border-radius: 6px; }
+  @media (prefers-reduced-motion: reduce) {
+    .tour-spot, .tour-card, .tour-card h3, .tour-card p { transition: none; animation: none; }
+  }
   .tour-card h3 { font-size: 15px; letter-spacing: -.6px; margin-bottom: 4px; }
   .tour-card .row { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
   .tour-card .count { font: 10px 'Fira Code', monospace; opacity: .6; flex: 1; }
@@ -597,8 +613,6 @@
     </div>
   </div>
 
-  <!-- Contact the researchers -->
-  </div>
 </div>
 
 <!-- outside the scaled frame so it stays pinned to the window corner -->
@@ -617,6 +631,7 @@
   <button class="contact-btn" id="contactBtn" aria-label="Contact the researchers" aria-expanded="false">
     <img src="assets/icon-envelope.svg" alt="" width="24" height="24">
   </button>
+</div>
 
 <div class="gate" id="gate" hidden>
   <form class="gate-card" id="gateForm" role="dialog" aria-labelledby="gateHi" autocomplete="off">
@@ -1062,7 +1077,6 @@
     clip.style.display = s.id === 'intro' ? '' : 'none';
     binder.classList.toggle('can-add', s.kind !== 'intro');
     drawPager();
-    if (s.kind === 'day' && tour.hidden && !taskSeen(s.day)) setTimeout(() => { if (sections[current] === s) showTask(s.day); }, prev >= 0 ? 950 : 0);
   }
 
   // "Page n of m" counts the spreads inside the current tab, e.g. a day's questions and its rough pages
@@ -1673,6 +1687,7 @@
       placePicture();
       drawTexts();
     }
+    if (act === 'save' && a.m.demo) return closeAnnot();
     if (act === 'save') {
       selectText(null);
       const px = a.ctx.getImageData(0, 0, a.cv.width, a.cv.height).data;
@@ -1750,11 +1765,9 @@
   });
 
   // ---------- today's task ----------
-  // The first time a participant opens each day, its instruction appears as a note over the diary.
-  // Clicking the day's title brings it back.
+  // A day's instruction appears as a note over the diary when a session opens on that day,
+  // and again from the calendar button or by clicking the day's title.
   const task = document.getElementById('task');
-  const seenKey = day => `diary-task-seen-${TOKEN || 'anon'}-d${day}`;
-  const taskSeen = day => { try { return !!localStorage.getItem(seenKey(day)); } catch { return false; } };
   // the carets step through the tasks of days that have opened so far
   let taskDay = 0;
   const lastOpenDay = () => openDay === null ? 5 : openDay;
@@ -1767,7 +1780,6 @@
     document.getElementById('taskText').textContent = d.task;
     document.getElementById('taskTip').textContent = d.tip ? `Tip: ${d.tip}` : '';
     task.hidden = false;
-    try { localStorage.setItem(seenKey(day), '1'); } catch {}
     document.getElementById('taskClose').focus();
   }
   const hideTask = () => { task.hidden = true; };
@@ -1779,64 +1791,152 @@
   binder.addEventListener('click', e => { const t = e.target.closest('[data-task]'); if (t) showTask(+t.dataset.task); });
 
   // ---------- onboarding tour ----------
-  // Plays the first time someone opens the diary, and again from the ? button. Steps that point at
-  // day or rough pages turn to that spread first.
+  // Plays the first time someone opens the diary, and again from the ? button. Each step can turn to
+  // a spread (sec: 'cover' closes the diary), act out a small demo (enter), and undo it when left.
+  // The highlight glides between targets and the card's text cross-fades, so it reads as one scene.
+  const TOUR_DEMO = { id: 'tour-demo', demo: true, page: 'd1r-l', kind: 'image', url: 'assets/tour-demo.webp',
+    content: { name: 'Sample screenshot' }, x: 40, y: 70, w: 321, h: 0, z: 999 };
   const TOUR = [
-    { sel: '#tabs', title: 'Welcome to your diary', text: 'These tabs jump between the intro, each of the 5 days, and a spare Rough section at the back.' },
-    { sel: '#next', title: 'Turning pages', text: 'Use the arrows on the sides (or ← → on your keyboard) to flip pages. The × next to your name closes the diary.' },
-    { sec: 'day', sel: '#left .mood', title: 'How did today go?', text: 'Each day, finish the line “Today my day was …” and tap the face that best matches it. Tap it again to clear it.' },
-    { sec: 'day', sel: '#right .page-date', title: 'Date your entries', text: 'Click here to pick the date you’re writing on. Hover the day’s title to see that day’s task.' },
-    { sec: 'day', sel: '#left .qs', title: 'Answer the questions', text: 'Type straight onto the page. Everything saves automatically as you go.' },
-    { sec: 'day', sel: '.page-count', title: 'Pages within a day', text: 'Each day has a question spread followed by rough pages. This shows which page of the day you’re on.' },
-    { sec: 'dayr', sel: '#binder', title: 'Rough pages are a canvas', text: 'Jot notes, then drag screenshots, videos, files and notes anywhere, even onto the facing page. Pull an item’s corner to resize it, and ✎ to draw on an image or video.' },
-    { sec: 'dayr', sel: '#fab', title: 'Add things', text: 'Use + to add an image, file, video, sticky note, or a whole new rough page.', open: true },
-    { sel: '#helpBtn', title: 'You’re all set', text: 'Tap ? any time to replay this tour, the calendar to see the day’s task, or email your researchers with the envelope button.' },
+    { sec: 'cover', sel: '#cover', title: 'This is your diary',
+      text: 'Over the week you’ll use it to keep track of your process: what you tried, what worked and what didn’t.' },
+    { sec: 'intro', sel: '.sticker', title: 'Start with the instructions',
+      text: 'Hover over the stickers to learn more about your instructions.', enter: () => cycleStickers(true), leave: () => cycleStickers(false) },
+    { sec: 'd1', sel: '#binder .slot', title: 'Answer a few questions each day',
+      text: 'This is where you answer the day’s questions. Be exhaustive and tell us everything.' },
+    { sec: 'd1r', sel: '#binder .slot', title: 'Your rough pages',
+      text: 'Add anything you wish here: half-formed ideas, prompts you used, challenges you faced, things that surprised you.' },
+    { sec: 'd1r', sel: '#fab, #fabMenu', title: 'Add images and more',
+      text: 'Tap + and pick Image to drop in a screenshot. Files, videos, notes and extra pages work the same way.', enter: demoUpload, leave: () => removeDemo() },
+    { sec: 'd1r', sel: '.annot-card', title: 'Mark it up', above: true,
+      text: 'Every image opens in the editor. Draw on it, add text and crop to show what mattered. Tell us everything.', enter: demoAnnotate, leave: () => { if (demoAnnotOpen) closeAnnot(); demoAnnotOpen = false; removeDemo(); } },
+    { sec: 'd1r', sel: '#tabs', title: 'Move between days',
+      text: 'Use the tabs to go between days. Later days are locked for now and open as the week goes by.' },
+    { sec: 'd1r', sel: '#helpBtn', title: 'Each day’s instructions',
+      text: 'Tap the calendar any time to see the instructions for the day.' },
+    { sec: 'd1r', sel: '#tourBtn', title: 'Need a refresher?',
+      text: 'Tap ? whenever you want to replay this tour. That’s it, happy writing!' },
   ];
   const tour = document.getElementById('tour'), tourSpot = document.getElementById('tourSpot'), tourCard = document.getElementById('tourCard');
-  let tourAt = -1;
+  let tourAt = -1, tourStep = null, tourRun = 0;
   const wait = ms => new Promise(r => setTimeout(r, ms));
-  async function showTour(i) {
-    tourAt = i;
-    const step = tourSteps[i];
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+  // the stickers show their tips one after another, as if someone were hovering them
+  let stickerTimer;
+  function cycleStickers(on) {
+    clearInterval(stickerTimer);
+    stickerTimer = null;
+    document.querySelectorAll('.sticker.demo').forEach(s => s.classList.remove('demo'));
+    if (!on) return;
+    let k = 0;
+    const next = () => {
+      const all = document.querySelectorAll('.sticker');
+      all.forEach((s, i) => s.classList.toggle('demo', i === k % all.length));
+      k++;
+      // the highlight stretches to take in the tip that's showing
+      setTimeout(() => { if (stickerTimer) spotOn('.sticker, .sticker.demo .tip'); }, 220);
+    };
+    next();
+    stickerTimer = setInterval(next, 1800);
+  }
+  // a sample image lands on the rough page; it lives only on screen and is never saved
+  function removeDemo() { document.querySelectorAll('[data-id="tour-demo"]').forEach(el => el.remove()); }
+  function placeDemo() {
+    removeDemo();
+    const layer = document.querySelector('#left .grid[data-media] .media-layer');
+    if (layer) layer.insertAdjacentHTML('beforeend', mediaHTML(TOUR_DEMO));
+  }
+  async function demoUpload(run) {
+    fabMenu.hidden = false; fab.setAttribute('aria-expanded', 'true');
+    fabMenu.querySelector('[data-pick="image"]').classList.add('demo');
+    await wait(1800);
+    if (run !== tourRun) return;
+    fabMenu.querySelector('[data-pick="image"]').classList.remove('demo');
     closeMenu();
-    const want = step.sec ?? (current < 0 ? 'intro' : null);
-    if (want && sections[current]?.id !== want) { go(sections.findIndex(s => s.id === want)); await wait(current < 0 ? 1600 : 1050); }
-    if (tourAt !== i || tour.hidden) return;
-    if (step.open) { fabMenu.hidden = false; fab.setAttribute('aria-expanded', 'true'); }
-    const el = document.querySelector(step.sel);
-    const r = (step.open ? fabMenu : el).getBoundingClientRect();
-    const f = el.getBoundingClientRect();
-    const box = { l: Math.min(r.left, f.left) - 6, t: Math.min(r.top, f.top) - 6, r: Math.max(r.right, f.right) + 6, b: Math.max(r.bottom, f.bottom) + 6 };
-    Object.assign(tourSpot.style, { left: box.l + 'px', top: box.t + 'px', width: box.r - box.l + 'px', height: box.b - box.t + 'px' });
+    placeDemo();
+    spotOn('#left [data-id="tour-demo"]');
+  }
+  let demoAnnotOpen = false;
+  async function demoAnnotate(run) {
+    placeDemo();
+    openAnnot(TOUR_DEMO);
+    demoAnnotOpen = true;
+    await wait(350);
+    if (run === tourRun) spotOn('.annot-card');
+  }
+
+  // the highlight hugs every element the selector matches
+  function spotOn(sel) {
+    const els = [...document.querySelectorAll(sel)].filter(el => el.offsetParent || el.getClientRects().length);
+    if (!els.length) return null;
+    const rs = els.map(el => el.getBoundingClientRect());
+    const box = { l: Math.min(...rs.map(r => r.left)) - 6, t: Math.min(...rs.map(r => r.top)) - 6,
+      r: Math.max(...rs.map(r => r.right)) + 6, b: Math.max(...rs.map(r => r.bottom)) + 6 };
+    Object.assign(tourSpot.style, { left: box.l + 'px', top: box.t + 'px', width: box.r - box.l + 'px', height: box.b - box.t + 'px', opacity: 1 });
+    placeCard(box);
+    return box;
+  }
+  // beside the highlight where there's room, otherwise below or above it, else over its corner
+  function placeCard(box) {
+    const cw = 280, ch = tourCard.offsetHeight, gap = 14;
+    let x = box.r + gap, y = box.t;
+    if (x + cw > innerWidth - 8) x = box.l - gap - cw;
+    if (x < 8) {
+      x = Math.min(Math.max(8, box.l), innerWidth - cw - 8);
+      y = box.b + gap;
+      if (y + ch > innerHeight - 8) y = box.t - gap - ch;
+      if (y < 8) { x = box.r - cw - 16; y = box.b - ch - 16; }
+    }
+    tourCard.style.left = x + 'px';
+    tourCard.style.top = Math.max(8, Math.min(innerHeight - ch - 8, y)) + 'px';
+  }
+
+  async function showTour(i) {
+    const run = ++tourRun;
+    tourStep?.leave?.();
+    tourAt = i;
+    const step = tourStep = tourSteps[i];
+    closeMenu();
+    tour.classList.toggle('above', !!step.above);
+    // the card fades its words out while the diary turns, then fades the new ones in
+    tourCard.classList.add('swap');
+    const want = step.sec === 'cover' ? -1 : sections.findIndex(s => s.id === step.sec);
+    if (want !== current) {
+      tourSpot.style.opacity = 0;
+      const from = current;
+      go(want);
+      await wait(reduceMotion.matches ? 100 : from < 0 || want < 0 ? 1500 : 1000);
+    } else await wait(180);
+    if (run !== tourRun || tour.hidden) return;
     document.getElementById('tourTitle').textContent = step.title;
     document.getElementById('tourText').textContent = step.text;
     document.getElementById('tourCount').textContent = `${i + 1} / ${tourSteps.length}`;
     tourCard.querySelector('[data-t="back"]').hidden = i === 0;
     tourCard.querySelector('[data-t="next"]').textContent = i === tourSteps.length - 1 ? 'Done' : 'Next';
-    // beside the highlight where there's room, otherwise below or above it
-    const cw = 280, ch = tourCard.offsetHeight, gap = 14;
-    let x = box.r + gap, y = box.t;
-    if (x + cw > innerWidth - 8) x = box.l - gap - cw;
-    if (x < 8) { x = Math.min(Math.max(8, box.l), innerWidth - cw - 8); y = box.b + gap; if (y + ch > innerHeight - 8) y = box.t - gap - ch; }
-    tourCard.style.left = x + 'px';
-    tourCard.style.top = Math.max(8, Math.min(innerHeight - ch - 8, y)) + 'px';
+    if (step.enter === demoUpload) { fabMenu.hidden = false; fab.setAttribute('aria-expanded', 'true'); }
+    if (step.enter !== demoAnnotate) spotOn(step.sel);
+    tourCard.classList.remove('swap');
     tourCard.querySelector('[data-t="next"]').focus();
+    step.enter?.(run);
   }
-  // day steps use whichever day is open today; with none open they're skipped and the canvas steps use the back Rough section
   let tourSteps = TOUR;
   function startTour() {
-    const day = openDay === null ? 1 : openDay;
-    tourSteps = TOUR.filter(t => t.sec !== 'day' || day)
-      .map(t => t.sec === 'day' ? { ...t, sec: 'd' + day } : t.sec === 'dayr' ? { ...t, sec: day ? `d${day}r` : 'rough' } : t);
+    tourSteps = TOUR;
     tour.hidden = false;
+    tourCard.classList.add('swap');
     showTour(0);
   }
   function endTour() {
+    tourRun++;
+    tourStep?.leave?.();
+    tourStep = null;
     tour.hidden = true;
+    tour.classList.remove('above');
     tourAt = -1;
     closeMenu();
     try { localStorage.setItem('diary-tour-done', '1'); } catch {}
-    if (!store1(sessionStorage, 'diary-landed')) openToday();
+    // the first-ever tour hands over on the closed cover; later sessions already landed on today
+    if (!store1(sessionStorage, 'diary-landed')) { store1(sessionStorage, 'diary-landed', '1'); go(-1); }
   }
   tourCard.onclick = e => {
     const t = e.target.closest('[data-t]')?.dataset.t;
@@ -1844,7 +1944,7 @@
     if (t === 'back') showTour(tourAt - 1);
     if (t === 'next') tourAt === tourSteps.length - 1 ? endTour() : showTour(tourAt + 1);
   };
-  addEventListener('resize', () => { if (!tour.hidden) showTour(tourAt); });
+  addEventListener('resize', () => { if (!tour.hidden && tourStep) spotOn(tourStep.enter === demoAnnotate ? '.annot-card' : tourStep.sel); });
   document.getElementById('tourBtn').onclick = () => { setContact(false); hideTask(); startTour(); };
   // ? shows the task for the day on screen, or the latest day that has opened
   document.getElementById('helpBtn').onclick = () => {
@@ -1857,7 +1957,7 @@
   if (params.has('welcome')) {
     params.delete('welcome');
     history.replaceState(null, '', location.pathname + (params.size ? '?' + params : ''));
-    ready.then(() => { go(0); setTimeout(startTour, 1600); });
+    ready.then(startTour);
   } else if (TOKEN && !store1(sessionStorage, 'diary-landed')) openToday();
   // Once per session, after the code is entered, the diary opens on today's day with its task showing
   function openToday() {
