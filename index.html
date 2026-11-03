@@ -28,6 +28,7 @@
 
   /* Design frame is 1280×832; scaled to fit the window so the page never scrolls */
   html.zoomed { overflow: auto; } html.zoomed body { overflow: visible; }
+  #frame.gliding { transition: transform .6s var(--ease), left .6s var(--ease), top .6s var(--ease); }
   #frame { position: absolute; left: 50%; top: 50%; width: 1280px; height: 832px; perspective: 2400px; }
 
   .mono { font-family: 'Fira Code', monospace; font-size: 10px; letter-spacing: .5px; color: #000; }
@@ -323,7 +324,8 @@
   .file-chip img { width: 14px; height: 14px; flex: none; }
 
   /* add-media button + menu, in binder coordinates from the design */
-  .fab, .fab-menu { position: absolute; z-index: 6; background: var(--paper); border: 0; border-radius: 44px;
+  /* above the side arrows, so the open menu is never cut through by ›  */
+  .fab, .fab-menu { position: absolute; z-index: 8; background: var(--paper); border: 0; border-radius: 44px;
     box-shadow: 2.5px 2.5px 7.5px rgba(0,0,0,.25); }
   .fab { left: 854px; top: 506.5px; width: 40px; height: 40px; display: grid; place-items: center; cursor: pointer;
     transition: transform .2s; }
@@ -493,26 +495,33 @@
   /* ---------- onboarding tour ---------- */
   .tour { position: fixed; inset: 0; z-index: 30; }
   .tour.above { z-index: 45; }
-  /* one ease for every move; the highlight glides and resizes, the card follows and cross-fades */
+  /* Between steps the highlight folds into its bottom-right corner, then drags out from the next
+     target's top-left corner to its bottom-right; the card fades out first and rises in once it lands */
   .tour-spot { position: fixed; border-radius: 8px; box-shadow: 0 0 0 9999px rgba(0,0,0,.6); pointer-events: none;
-    transition: left .45s var(--ease), top .45s var(--ease), width .45s var(--ease), height .45s var(--ease), opacity .25s ease; }
-  .tour-card { position: fixed; width: 280px; background: var(--paper); color: var(--ink); padding: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.4);
-    font-size: 13px; line-height: 1.45; letter-spacing: -.3px; transition: left .45s var(--ease), top .45s var(--ease); }
-  .tour-card h3, .tour-card p { transition: opacity .2s ease, transform .2s ease; }
-  .tour-card.swap h3, .tour-card.swap p { opacity: 0; transform: translateY(4px); }
-  .tour:not([hidden]) .tour-card { animation: menuIn .3s var(--ease); }
-  /* the tour's pretend hover on a sticker, and its pretend tap on Image */
-  .sticker.demo img { transform: scale(1.08) rotate(-2deg); }
-  .sticker.demo .tip { opacity: 1; transform: none; }
-  .fab-menu button.demo { background: rgba(0,0,0,.08); border-radius: 6px; }
+    transition: left var(--spot-t, .5s) var(--ease), top var(--spot-t, .5s) var(--ease),
+      width var(--spot-t, .5s) var(--ease), height var(--spot-t, .5s) var(--ease); }
+  .tour-spot.still { transition: none; }
+  /* Figma 66:6090 */
+  .tour-card { position: fixed; width: 276px; background: #f0f1ec; color: #000; padding: 21px 14px 18px; box-shadow: 0 6px 24px rgba(0,0,0,.4);
+    display: flex; flex-direction: column; gap: 12px; transition: opacity .25s ease, transform .3s var(--ease); }
+  .tour-card.away { opacity: 0; transform: translateY(8px); pointer-events: none; }
+  .tour-card .top { display: flex; align-items: flex-end; justify-content: space-between; }
+  .tour-card .count { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 3.333px; background: #1b1b1b;
+    color: #fff; font-size: 10px; font-weight: 700; }
+  .tour-card .words { display: flex; flex-direction: column; gap: 4px; }
+  .tour-card h3 { font-size: 16px; font-weight: 700; }
+  .tour-card p { font-size: 14px; }
+  .tour-card button { border: 0; cursor: pointer; background: none; color: #000; font: 600 12px Inter, sans-serif; }
+  .tour-card .skip { width: 44px; line-height: 20px; font-weight: 500; }
+  .tour-card .row { display: flex; justify-content: flex-end; gap: 4px; }
+  .tour-card .row button { width: 70px; height: 30px; border-radius: 4px; }
+  .tour-card .row button.primary { background: #000; color: #fff; font-weight: 400; }
+  /* on steps that invite a try (hovering the stickers), the pointer reaches the diary under the overlay */
+  .tour.pass { pointer-events: none; }
+  .tour.pass .tour-card { pointer-events: auto; }
   @media (prefers-reduced-motion: reduce) {
-    .tour-spot, .tour-card, .tour-card h3, .tour-card p { transition: none; animation: none; }
+    .tour-spot, .tour-card { transition: none; animation: none; }
   }
-  .tour-card h3 { font-size: 15px; letter-spacing: -.6px; margin-bottom: 4px; }
-  .tour-card .row { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
-  .tour-card .count { font: 10px 'Fira Code', monospace; opacity: .6; flex: 1; }
-  .tour-card button { border: 0; padding: 7px 12px; cursor: pointer; font: 12px Inter, sans-serif; background: none; color: var(--ink); }
-  .tour-card button.primary { background: var(--bg); color: var(--paper); }
 
   /* ---------- page-turn ---------- */
   .turn { position: absolute; top: 159px; width: 432px; height: 527px; z-index: 5; pointer-events: none;
@@ -682,9 +691,9 @@
 <div class="tour" id="tour" role="dialog" aria-labelledby="tourTitle" hidden>
   <div class="tour-spot" id="tourSpot"></div>
   <div class="tour-card" id="tourCard">
-    <h3 id="tourTitle"></h3><p id="tourText"></p>
-    <div class="row"><span class="count" id="tourCount"></span>
-      <button data-t="skip">Skip</button><button data-t="back">Back</button><button class="primary" data-t="next">Next</button></div>
+    <div class="top"><span class="count" id="tourCount"></span><button class="skip" data-t="skip">Skip</button></div>
+    <div class="words"><h3 id="tourTitle"></h3><p id="tourText"></p></div>
+    <div class="row"><button data-t="back">Back</button><button class="primary" data-t="next">Next</button></div>
   </div>
 </div>
 
@@ -1459,7 +1468,10 @@
   function setAnnotSize(large) {
     annotCard.classList.toggle('large', large);
     const [w, h] = large ? [967, 683] : [450, 550];
-    annotCard.style.setProperty('--fit', Math.min(1, (innerWidth - 32) / w, (innerHeight - 32) / h));
+    // during the tour the editor keeps clear of the strip the tour card uses
+    const room = tour.hidden ? 0 : Math.min(tourRoom, innerWidth * .3);
+    annot.style.paddingRight = room + 'px';
+    annotCard.style.setProperty('--fit', Math.min(1, (innerWidth - 32 - room) / w, (innerHeight - 32) / h));
   }
 
   // (Re)builds the frame at the current size, carrying over the drawing so far
@@ -1687,7 +1699,6 @@
       placePicture();
       drawTexts();
     }
-    if (act === 'save' && a.m.demo) return closeAnnot();
     if (act === 'save') {
       selectText(null);
       const px = a.ctx.getImageData(0, 0, a.cv.width, a.cv.height).data;
@@ -1701,8 +1712,12 @@
       c.mode = annotCard.classList.contains('large') ? 'large' : 'small';
       c.texts = a.texts.filter(t => t.text.trim()).map(({ id, ...t }) => t);
       delete c.crop;
-      redraw(a.m.page);
-      mediaStore.save(a.m).catch(e => console.warn('edit not saved', e));
+      // the tour's sample only goes back on screen; it is never saved
+      if (a.m.demo) placeDemo();
+      else {
+        redraw(a.m.page);
+        mediaStore.save(a.m).catch(e => console.warn('edit not saved', e));
+      }
       closeAnnot();
     }
   });
@@ -1792,28 +1807,38 @@
 
   // ---------- onboarding tour ----------
   // Plays the first time someone opens the diary, and again from the ? button. Each step can turn to
-  // a spread (sec: 'cover' closes the diary), act out a small demo (enter), and undo it when left.
-  // The highlight glides between targets and the card's text cross-fades, so it reads as one scene.
+  // a spread (sec: 'cover' closes the diary) and set up what it shows (setup). Hands-on steps wait
+  // for the participant to click the highlighted control (on); Next clicks it for them. The highlight
+  // glides between targets and the card's text cross-fades, so it reads as one scene.
   const TOUR_DEMO = { id: 'tour-demo', demo: true, page: 'd1r-l', kind: 'image', url: 'assets/tour-demo.webp',
     content: { name: 'Sample screenshot' }, x: 40, y: 70, w: 321, h: 0, z: 999 };
   const TOUR = [
-    { sec: 'cover', sel: '#cover', title: 'This is your diary',
+    { sec: 'cover', sel: '#cover', title: 'This is your diary', setup: demoReset,
       text: 'Over the week you’ll use it to keep track of your process: what you tried, what worked and what didn’t.' },
-    { sec: 'intro', sel: '.sticker', title: 'Start with the instructions',
-      text: 'Hover over the stickers to learn more about your instructions.', enter: () => cycleStickers(true), leave: () => cycleStickers(false) },
-    { sec: 'd1', sel: '#binder .slot', title: 'Answer a few questions each day',
+    { sec: 'intro', sel: '#left', title: 'Start with the instructions', pass: true, setup: demoReset,
+      text: 'Hover over the stickers to learn more about your instructions.' },
+    { sec: 'd1', sel: '#binder .slot', title: 'Answer a few questions each day', setup: demoReset,
       text: 'This is where you answer the day’s questions. Be exhaustive and tell us everything.' },
-    { sec: 'd1r', sel: '#binder .slot', title: 'Your rough pages',
+    { sec: 'd1r', sel: '#binder .slot', title: 'Your rough pages', setup: demoReset,
       text: 'Add anything you wish here: half-formed ideas, prompts you used, challenges you faced, things that surprised you.' },
-    { sec: 'd1r', sel: '#fab, #fabMenu', title: 'Add images and more',
-      text: 'Tap + and pick Image to drop in a screenshot. Files, videos, notes and extra pages work the same way.', enter: demoUpload, leave: () => removeDemo() },
-    { sec: 'd1r', sel: '.annot-card', title: 'Mark it up', above: true,
-      text: 'Every image opens in the editor. Draw on it, add text and crop to show what mattered. Tell us everything.', enter: demoAnnotate, leave: () => { if (demoAnnotOpen) closeAnnot(); demoAnnotOpen = false; removeDemo(); } },
-    { sec: 'd1r', sel: '#tabs', title: 'Move between days',
+    { sec: 'd1r', sel: '#fab, #fabMenu', title: 'Add an image', pass: true, on: '#fabMenu [data-pick="image"]', block: true,
+      text: 'Click Image to add a screenshot. Files, videos, notes and extra pages work the same way.',
+      setup: async () => { demoReset(); fabMenu.hidden = false; fab.setAttribute('aria-expanded', 'true'); await wait(250); },
+      act: () => { closeMenu(); placeDemo(); openAnnot(TOUR_DEMO); } },
+    { sec: 'd1r', sel: '.annot .annot-swatches, .annot [data-tool="pen"], .annot .annot-tools', title: 'Mark it up', above: true, pass: true, on: '.annot [data-tool="pen"]',
+      text: 'Every image opens in the editor. Click the pencil to draw on it.',
+      setup: () => demoEditor(false), act: drawDemoMarks },
+    { sec: 'd1r', sel: '#annotStage', title: 'Tell us everything', above: true, pass: true, on: '.annot [data-act="save"]',
+      text: 'Draw on it, label the parts that helped or got in the way, and crop to what matters. The more you mark up, the more we learn. Click Next when you’re done.',
+      setup: () => demoEditor(true) },
+    { sec: 'd1r', sel: '#left [data-id="tour-demo"]', title: 'It’s on your page',
+      text: 'Your marked-up image now sits on the rough page. Drag it anywhere, pull a corner to resize, or right-click to edit it again.',
+      setup: demoSaved },
+    { sec: 'd1r', sel: '#tabs .tab', title: 'Move between days', setup: demoSaved,
       text: 'Use the tabs to go between days. Later days are locked for now and open as the week goes by.' },
-    { sec: 'd1r', sel: '#helpBtn', title: 'Each day’s instructions',
+    { sec: 'd1r', sel: '#helpBtn', title: 'Each day’s instructions', setup: demoSaved,
       text: 'Tap the calendar any time to see the instructions for the day.' },
-    { sec: 'd1r', sel: '#tourBtn', title: 'Need a refresher?',
+    { sec: 'd1r', sel: '#tourBtn', title: 'Need a refresher?', setup: demoSaved,
       text: 'Tap ? whenever you want to replay this tour. That’s it, happy writing!' },
   ];
   const tour = document.getElementById('tour'), tourSpot = document.getElementById('tourSpot'), tourCard = document.getElementById('tourCard');
@@ -1821,117 +1846,183 @@
   const wait = ms => new Promise(r => setTimeout(r, ms));
   const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
-  // the stickers show their tips one after another, as if someone were hovering them
-  let stickerTimer;
-  function cycleStickers(on) {
-    clearInterval(stickerTimer);
-    stickerTimer = null;
-    document.querySelectorAll('.sticker.demo').forEach(s => s.classList.remove('demo'));
-    if (!on) return;
-    let k = 0;
-    const next = () => {
-      const all = document.querySelectorAll('.sticker');
-      all.forEach((s, i) => s.classList.toggle('demo', i === k % all.length));
-      k++;
-      // the highlight stretches to take in the tip that's showing
-      setTimeout(() => { if (stickerTimer) spotOn('.sticker, .sticker.demo .tip'); }, 220);
-    };
-    next();
-    stickerTimer = setInterval(next, 1800);
-  }
-  // a sample image lands on the rough page; it lives only on screen and is never saved
+  // The sample image lives only on screen and is never uploaded or saved
   function removeDemo() { document.querySelectorAll('[data-id="tour-demo"]').forEach(el => el.remove()); }
   function placeDemo() {
     removeDemo();
     const layer = document.querySelector('#left .grid[data-media] .media-layer');
     if (layer) layer.insertAdjacentHTML('beforeend', mediaHTML(TOUR_DEMO));
   }
-  async function demoUpload(run) {
-    fabMenu.hidden = false; fab.setAttribute('aria-expanded', 'true');
-    fabMenu.querySelector('[data-pick="image"]').classList.add('demo');
-    await wait(1800);
-    if (run !== tourRun) return;
-    fabMenu.querySelector('[data-pick="image"]').classList.remove('demo');
-    closeMenu();
-    placeDemo();
-    spotOn('#left [data-id="tour-demo"]');
+  const demoEditing = () => !annot.hidden && annotState?.m.demo;
+  function demoReset() {
+    if (!annot.hidden && (!annotState || annotState.m.demo)) closeAnnot();
+    removeDemo();
+    TOUR_DEMO.content = { name: 'Sample screenshot' };
   }
-  let demoAnnotOpen = false;
-  async function demoAnnotate(run) {
-    placeDemo();
-    openAnnot(TOUR_DEMO);
-    demoAnnotOpen = true;
-    await wait(350);
-    if (run === tourRun) spotOn('.annot-card');
+  // the editor open on the sample, with or without the tour's scribbles
+  async function demoEditor(marked) {
+    if (!demoEditing() || !!annotState.marked !== marked) {
+      demoReset();
+      placeDemo();
+      openAnnot(TOUR_DEMO);
+      for (let n = 0; n < 40 && !annotState; n++) await wait(50);
+      if (marked && annotState) drawDemoMarks();
+    }
+    await wait(150);
+  }
+  // after Save: the editor closed and the marked-up sample on the page
+  async function demoSaved() {
+    if (demoEditing()) annot.querySelector('[data-act="save"]').click();
+    else if (!TOUR_DEMO.content.view) { await demoEditor(true); annot.querySelector('[data-act="save"]').click(); }
+    else if (!document.querySelector('#left [data-id="tour-demo"]')) placeDemo();
+  }
+  // a circle, an arrow and a note, as if the participant had marked the screenshot up
+  function drawDemoMarks() {
+    const a = annotState;
+    if (!a || a.marked) return;
+    a.marked = true;
+    setTool('pen');
+    const { ctx, dpr, FW, FH } = a;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.strokeStyle = a.color;
+    ctx.lineWidth = 3.5 * dpr;
+    ctx.beginPath();
+    ctx.ellipse(FW * .42 * dpr, FH * .42 * dpr, FW * .2 * dpr, FH * .14 * dpr, -.05, 0, Math.PI * 2);
+    ctx.stroke();
+    const [x1, y1, x2, y2] = [FW * .78, FH * .16, FW * .6, FH * .32].map(v => v * dpr);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.quadraticCurveTo(x1 - 10 * dpr, y2 - 20 * dpr, x2, y2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x2, y2); ctx.lineTo(x2 + 14 * dpr, y2 - 2 * dpr); ctx.moveTo(x2, y2); ctx.lineTo(x2 + 4 * dpr, y2 - 13 * dpr); ctx.stroke();
+    a.texts.push({ id: newId(), x: .66, y: .06, w: .3, f: TEXT_PX / FW, color: a.color, text: 'This bit saved me an hour!' });
+    drawTexts();
   }
 
-  // the highlight hugs every element the selector matches
-  function spotOn(sel) {
+  // Hands-on steps: a click on the highlighted control moves the tour on. Image is acted out
+  // (no file picker); the pencil and Save do their usual job first. Other controls in the + menu
+  // stay quiet while the tour waits for Image.
+  document.addEventListener('click', e => {
+    const step = tourStep;
+    if (tour.hidden || !step?.on || e.target.closest('#tourCard')) return;
+    const hit = e.target.closest(step.on);
+    if (!hit) {
+      if (step.block && e.target.closest('#fab, #fabMenu')) { e.preventDefault(); e.stopPropagation(); }
+      return;
+    }
+    const at = tourAt;
+    if (step.block) { e.preventDefault(); e.stopPropagation(); }
+    setTimeout(() => {
+      if (tourAt !== at) return;
+      step.act?.();
+      showTour(at + 1);
+    });
+  }, true);
+
+  // the highlight hugs every element the selector matches; it drags out from the top-left corner
+  // unless it's only being re-measured (still)
+  const SPOT_MS = 500, FOLD_MS = 260;
+  const setSpot = (l, t, w, h) => Object.assign(tourSpot.style, { left: l + 'px', top: t + 'px', width: w + 'px', height: h + 'px' });
+  function spotOn(sel, still) {
     const els = [...document.querySelectorAll(sel)].filter(el => el.offsetParent || el.getClientRects().length);
     if (!els.length) return null;
     const rs = els.map(el => el.getBoundingClientRect());
-    const box = { l: Math.min(...rs.map(r => r.left)) - 6, t: Math.min(...rs.map(r => r.top)) - 6,
-      r: Math.max(...rs.map(r => r.right)) + 6, b: Math.max(...rs.map(r => r.bottom)) + 6 };
-    Object.assign(tourSpot.style, { left: box.l + 'px', top: box.t + 'px', width: box.r - box.l + 'px', height: box.b - box.t + 'px', opacity: 1 });
+    // a roomier margin left and right than above and below
+    const px = 16, py = 8;
+    const box = { l: Math.min(...rs.map(r => r.left)) - px, t: Math.min(...rs.map(r => r.top)) - py,
+      r: Math.max(...rs.map(r => r.right)) + px, b: Math.max(...rs.map(r => r.bottom)) + py };
+    if (!still) {
+      tourSpot.classList.add('still');
+      setSpot(box.l, box.t, 0, 0);
+      tourSpot.offsetWidth;   // start the drag from the corner, not from wherever it was
+      tourSpot.classList.remove('still');
+      tourSpot.style.setProperty('--spot-t', SPOT_MS + 'ms');
+    }
+    setSpot(box.l, box.t, box.r - box.l, box.b - box.t);
     placeCard(box);
     return box;
   }
-  // beside the highlight where there's room, otherwise below or above it, else over its corner
+  // the highlight folds into its own bottom-right corner, leaving the page evenly dimmed
+  function foldSpot() {
+    const r = tourSpot.getBoundingClientRect();
+    tourSpot.style.setProperty('--spot-t', FOLD_MS + 'ms');
+    setSpot(r.right, r.bottom, 0, 0);
+  }
+  // beside the highlight where there's room, otherwise below or above it, else over its corner;
+  // always at least 40px above the bottom of the window
   function placeCard(box) {
-    const cw = 280, ch = tourCard.offsetHeight, gap = 14;
+    const cw = 276, ch = tourCard.offsetHeight, gap = 14;
     let x = box.r + gap, y = box.t;
     if (x + cw > innerWidth - 8) x = box.l - gap - cw;
     if (x < 8) {
       x = Math.min(Math.max(8, box.l), innerWidth - cw - 8);
       y = box.b + gap;
-      if (y + ch > innerHeight - 8) y = box.t - gap - ch;
+      if (y + ch > innerHeight - 40) y = box.t - gap - ch;
       if (y < 8) { x = box.r - cw - 16; y = box.b - ch - 16; }
     }
     tourCard.style.left = x + 'px';
-    tourCard.style.top = Math.max(8, Math.min(innerHeight - ch - 8, y)) + 'px';
+    tourCard.style.top = Math.max(8, Math.min(innerHeight - ch - 40, y)) + 'px';
   }
 
   async function showTour(i) {
     const run = ++tourRun;
-    tourStep?.leave?.();
     tourAt = i;
     const step = tourStep = tourSteps[i];
-    closeMenu();
-    tour.classList.toggle('above', !!step.above);
-    // the card fades its words out while the diary turns, then fades the new ones in
-    tourCard.classList.add('swap');
+    if (!step.on || !step.block) closeMenu();
+    // the card fades away and the highlight folds up while the diary turns
+    tourCard.classList.add('away');
+    foldSpot();
     const want = step.sec === 'cover' ? -1 : sections.findIndex(s => s.id === step.sec);
     if (want !== current) {
-      tourSpot.style.opacity = 0;
+      if (want < 0) demoReset();
       const from = current;
       go(want);
       await wait(reduceMotion.matches ? 100 : from < 0 || want < 0 ? 1500 : 1000);
-    } else await wait(180);
+    } else await wait(reduceMotion.matches ? 0 : FOLD_MS);
     if (run !== tourRun || tour.hidden) return;
+    await step.setup?.();
+    if (run !== tourRun || tour.hidden) return;
+    tour.classList.toggle('above', !!step.above);
+    tour.classList.toggle('pass', !!step.pass);
     document.getElementById('tourTitle').textContent = step.title;
     document.getElementById('tourText').textContent = step.text;
-    document.getElementById('tourCount').textContent = `${i + 1} / ${tourSteps.length}`;
+    document.getElementById('tourCount').textContent = String(i + 1).padStart(2, '0');
     tourCard.querySelector('[data-t="back"]').hidden = i === 0;
     tourCard.querySelector('[data-t="next"]').textContent = i === tourSteps.length - 1 ? 'Done' : 'Next';
-    if (step.enter === demoUpload) { fabMenu.hidden = false; fab.setAttribute('aria-expanded', 'true'); }
-    if (step.enter !== demoAnnotate) spotOn(step.sel);
-    tourCard.classList.remove('swap');
+    spotOn(step.sel);
+    // the card rises in beside the highlight once it has nearly finished dragging out
+    await wait(reduceMotion.matches ? 0 : SPOT_MS * .6);
+    if (run !== tourRun || tour.hidden) return;
+    tourCard.classList.remove('away');
     tourCard.querySelector('[data-t="next"]').focus();
-    step.enter?.(run);
+  }
+  // glide the diary aside for the card (or back to the middle when the tour ends)
+  function makeRoom(px) {
+    const frameEl = document.getElementById('frame');
+    frameEl.classList.toggle('gliding', !reduceMotion.matches);
+    tourRoom = px;
+    fit();
+    setTimeout(() => frameEl.classList.remove('gliding'), 650);
   }
   let tourSteps = TOUR;
   function startTour() {
     tourSteps = TOUR;
     tour.hidden = false;
-    tourCard.classList.add('swap');
-    showTour(0);
+    tourCard.classList.add('away');
+    makeRoom(300);
+    // start fully dimmed: a closed highlight in the middle of the window
+    tourSpot.classList.add('still');
+    setSpot(innerWidth / 2, innerHeight / 2, 0, 0);
+    tourSpot.offsetWidth;
+    tourSpot.classList.remove('still');
+    // first step measures once the diary has finished sliding aside
+    const run = tourRun;
+    setTimeout(() => { if (run === tourRun && !tour.hidden) showTour(0); }, reduceMotion.matches ? 0 : 650);
   }
   function endTour() {
     tourRun++;
-    tourStep?.leave?.();
     tourStep = null;
+    demoReset();
     tour.hidden = true;
-    tour.classList.remove('above');
+    tour.classList.remove('above', 'pass');
+    makeRoom(0);
     tourAt = -1;
     closeMenu();
     try { localStorage.setItem('diary-tour-done', '1'); } catch {}
@@ -1942,9 +2033,13 @@
     const t = e.target.closest('[data-t]')?.dataset.t;
     if (t === 'skip') endTour();
     if (t === 'back') showTour(tourAt - 1);
-    if (t === 'next') tourAt === tourSteps.length - 1 ? endTour() : showTour(tourAt + 1);
+    if (t !== 'next') return;
+    // on a hands-on step, Next does the click for them
+    const target = tourStep?.on && document.querySelector(tourStep.on);
+    if (target) target.click();
+    else tourAt === tourSteps.length - 1 ? endTour() : showTour(tourAt + 1);
   };
-  addEventListener('resize', () => { if (!tour.hidden && tourStep) spotOn(tourStep.enter === demoAnnotate ? '.annot-card' : tourStep.sel); });
+  addEventListener('resize', () => { if (!tour.hidden && tourStep) spotOn(tourStep.sel, true); });
   document.getElementById('tourBtn').onclick = () => { setContact(false); hideTask(); startTour(); };
   // ? shows the task for the day on screen, or the latest day that has opened
   document.getElementById('helpBtn').onclick = () => {
@@ -1991,12 +2086,16 @@
   // Zoomed in past the window, the page scrolls to reach the rest of the diary.
   const ZOOMS = [.5, .67, .8, .9, 1, 1.1, 1.25, 1.5, 1.75, 2, 2.5, 3];
   let zoom = +store1(localStorage, 'diary-zoom') || 1;
+  // During the tour the diary slides left and shrinks a little (tourRoom), leaving a strip on the
+  // right where the tour card can sit without covering what it points at.
+  let tourRoom = 0;
   const fit = () => {
-    const k = Math.min(innerWidth / 1280, innerHeight / 832) * zoom;
+    const room = Math.max(0, Math.min(tourRoom, innerWidth * .3));
+    const k = Math.min((innerWidth - room) / 1280, innerHeight / 832) * zoom;
     const W = 1280 * k, H = 832 * k;
     Object.assign(document.getElementById('frame').style, {
       transform: `scale(${k})`, transformOrigin: '0 0',
-      left: Math.max(0, (innerWidth - W) / 2) + 'px', top: Math.max(0, (innerHeight - H) / 2) + 'px' });
+      left: Math.max(0, (innerWidth - room - W) / 2) + 'px', top: Math.max(0, (innerHeight - H) / 2) + 'px' });
     document.documentElement.classList.toggle('zoomed', W > innerWidth + 1 || H > innerHeight + 1);
     document.documentElement.style.setProperty('--k', k);
   };
