@@ -323,10 +323,13 @@
     font: 12px Inter, sans-serif; letter-spacing: -.3px; color: var(--ink); cursor: pointer; }
   .ctx button:hover, .ctx button:focus-visible { background: rgba(0,0,0,.07); outline: none; }
   .ctx button.danger { color: var(--rough); }
-  .file-chip { display: flex; align-items: center; gap: 6px; padding: 7px 10px; background: var(--paper); border: 1px solid #cfd0cb;
-    font: 11px Inter, sans-serif; color: var(--ink); text-decoration: none; letter-spacing: -.3px; max-width: 300px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .file-chip img { width: 14px; height: 14px; flex: none; }
+  /* Figma 78:6477: a dark file card, file type badge on the left, name and size beside it */
+  .file-chip { display: flex; align-items: center; gap: 8px; padding: 12px; background: #1b1b1b; cursor: grab; user-select: none; }
+  .file-chip .ext { flex: none; display: grid; place-items: center; width: 26px; height: 22px; border: .5px solid #9b9b98; border-radius: 2px;
+    font: 10px Inter, sans-serif; letter-spacing: -.6px; color: rgba(240,241,235,.6); text-transform: uppercase; }
+  .file-chip .meta { display: flex; flex-direction: column; width: 133px; min-width: 0; }
+  .file-chip .fname { font: 14px Inter, sans-serif; letter-spacing: -.84px; color: #f0f1eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .file-chip .fsize { font: 300 10px Inter, sans-serif; letter-spacing: -.6px; color: rgba(240,241,235,.6); }
 
   /* add-media button + menu, in binder coordinates from the design */
   /* above the side arrows, so the open menu is never cut through by ›  */
@@ -1263,6 +1266,14 @@
   }
   const textsHTML = (texts = []) => texts.map(t => `<div class="win-text" style="left:${t.x * 100}%;top:${t.y * 100}%;width:${t.w * 100}%;`
     + `color:${t.color};font-size:${t.f * 100}cqw">${esc(t.text)}</div>`).join('');
+  // A div, not a link: dragging it moves the card instead of dropping its address into the page.
+  // A click without a drag opens the file.
+  const fileSize = b => !b ? '' : b < 1024 ** 2 ? `${Math.max(1, Math.round(b / 1024))}KB` : `${(b / 1024 ** 2).toFixed(b < 10 * 1024 ** 2 ? 1 : 0).replace(/\.0$/, '')}MB`;
+  function fileChip(m) {
+    const n = m.content.name || 'File', ext = n.includes('.') ? n.split('.').pop().slice(0, 4) : 'FILE';
+    return `<div class="file-chip" title="${esc(n)}"><span class="ext">.${esc(ext)}</span>`
+      + `<span class="meta"><span class="fname">${esc(n)}</span><span class="fsize">${fileSize(m.content.size)}</span></span></div>`;
+  }
   function mediaHTML(m) {
     const name = esc(m.content.name);
     const ann = m.content.ann ? `<img class="ann-ov" src="${m.content.ann}" alt="">` : '';
@@ -1282,7 +1293,7 @@
            : `<img src="${m.url}" alt="${name}" draggable="false">${ann}`)
       : m.kind === 'video' ? `<video src="${m.url}" controls preload="metadata"></video>${ann}`
       : m.kind === 'text' ? `<div class="grip" title="Drag to move"></div><textarea data-item="${m.id}" placeholder="Type a note…" aria-label="Note">${esc(m.content.text)}</textarea>`
-      : `<a class="file-chip" href="${m.url}" target="_blank" rel="noopener"><img src="assets/icon-file.svg" alt="">${name}</a>`;
+      : fileChip(m);
     const size = m.kind === 'document' ? '' : `width:${m.w}px;` + (m.kind === 'text' ? `height:${m.h}px;` : '');
     const handles = m.kind === 'document' ? '' : ['nw', 'ne', 'sw', 'se'].map(c => `<i class="rz ${c}" data-c="${c}"></i>`).join('');
     return `<div class="media ${m.kind}" data-id="${m.id}" style="left:${m.x}px;top:${m.y}px;z-index:${m.z || 0};${size}" title="Drag to move · right-click to edit or delete">${body}${handles}</div>`;
@@ -1313,7 +1324,7 @@
     let last;
     for (const f of files) {
       const n = media.filter(m => m.page === page).length;
-      const m = { id: newId(), page, kind, content: { name: f.name }, blob: f, url: URL.createObjectURL(f),
+      const m = { id: newId(), page, kind, content: { name: f.name, size: f.size }, blob: f, url: URL.createObjectURL(f),
         x: 15.5 + (n % 6) * 20, y: 15.5 + (n % 6) * 24, w: kind === 'document' ? 200 : 321, h: 0, z: ++topZ };
       media.push(m);
       last = m;
@@ -1455,7 +1466,7 @@
       removeEventListener('pointermove', move);
       removeEventListener('pointerup', up);
       if (!moved) {
-        if (m.kind === 'image') window.open(m.url, '_blank'); // a click without a drag opens the full image
+        if (m.kind === 'image' || m.kind === 'document') window.open(m.url, '_blank'); // a click without a drag opens the full image or file
         return;
       }
       // land on whichever rough page is under the pointer, or snap back to where it came from
