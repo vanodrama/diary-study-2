@@ -179,7 +179,7 @@
   /* some participants don't see the Microsoft logo; with a link it stays hidden until their setting loads */
   /* participants with another partner company see its logo in place of Microsoft's */
   body.logo-google #cover .ms, body.logo-google .ms-logo { content: url(assets/google.png); object-fit: contain; }
-  body.no-ms .ms, body.no-ms .ms-logo, body.ms-pending .ms, body.ms-pending .ms-logo { visibility: hidden; }
+  body.ms-pending .ms, body.ms-pending .ms-logo { visibility: hidden; }
 
   /* ---------- cover ---------- */
   #cover { position: absolute; left: 417px; top: 132px; width: 466px; height: 608px;
@@ -797,8 +797,8 @@
     document.body.classList.add('ms-pending');
     settingsLoaded = rpc('load_my_settings', {})
       .then(rows => {
-        document.body.classList.toggle('no-ms', !!rows?.[0]?.hide_microsoft_logo);
-        if (rows?.[0]?.partner_logo) document.body.classList.add(`logo-${rows[0].partner_logo}`);
+        // partner_logo is 'microsoft' or 'google'; Microsoft's logo is the default in the markup
+        if (rows?.[0]?.partner_logo === 'google') document.body.classList.add('logo-google');
         const { start_date: start, end_date: end } = rows?.[0] || {};
         if (start && end) document.getElementById('studyDates').textContent = `[ ${shortDate(start)} - ${shortDate(end)} ]`;
         if (start) unlockFrom(start);
