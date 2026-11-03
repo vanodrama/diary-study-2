@@ -102,8 +102,25 @@
   .turn .mood button, .turn .page-date input, .turn .day-summary { pointer-events: none; }
 
   /* ---------- binder (open spread) ---------- */
-  #binder { position: absolute; left: 184px; top: 140px; width: 913px; height: 551px; background: var(--accent);
-    display: flex; gap: 13px; align-items: center; padding: 12px 24px 12px 12px; transition: background .4s; }
+  #binder { position: absolute; left: 180px; top: 132px; width: 933px; height: 608px; background: var(--accent);
+    display: flex; gap: 13px; align-items: flex-start; padding: 27px 28px 0 28px; transition: background .4s; }
+  /* Figma 60:5634: a second sheet peeks out under each page */
+  #binder .slot::before { content: ''; position: absolute; left: 7px; top: 5.5px; width: 100%; height: 100%;
+    background: var(--paper); border: 1px solid #cfd0cb; box-sizing: border-box; box-shadow: -4px 4px 12px rgba(0,0,0,.12); }
+  #binder .slot#left::before { left: -6px; top: 6px; }
+  #binder.is-intro .slot::before { display: none; }
+  /* page count and a reminder along the bottom of the binder */
+  .binder-foot { position: absolute; left: 0; right: 0; top: 572px; font-size: 14px; letter-spacing: -.84px; color: #1b1b1b; white-space: nowrap; }
+  .binder-foot .page-count { position: absolute; left: 69px; transform: translateX(-50%); }
+  .binder-foot .foot-hint { position: absolute; right: 28px; }
+  #binder.is-intro .binder-foot .foot-hint { right: auto; left: 50%; transform: translateX(-50%); }
+  /* round ‹ › on the binder's sides */
+  .side-nav { position: absolute; top: calc(50% - 6px); transform: translateY(-50%); z-index: 7; width: 40px; height: 40px; border-radius: 43.75px;
+    border: 0; background: var(--paper); cursor: pointer; display: grid; place-items: center; box-shadow: 2.5px 2.5px 7.5px rgba(0,0,0,.25); transition: transform .15s, opacity .2s; }
+  .side-nav:hover:not(:disabled) { transform: translateY(-50%) scale(1.08); }
+  .side-nav:disabled { display: none; }
+  #prev { left: 11px; }
+  #next { right: 16px; }
   #binder .slot { width: 432px; height: 527px; position: relative; }
   /* tap the outer edge of the spread to turn the page: the binder's rim plus the page's blank outer margin */
   .edge { position: absolute; top: 0; height: 100%; border: 0; padding: 0; background: none; cursor: pointer; z-index: 5;
@@ -155,6 +172,7 @@
   .belongs p { position: absolute; left: 32.5px; top: 28.5px; font-size: 12px; letter-spacing: -.72px; }
   .belongs input { position: absolute; left: 24.5px; top: 72px; width: 122px; border: 0; border-bottom: 1px dashed #c9cac4;
     background: transparent; outline: none; font: 12px Inter, sans-serif; text-align: center; padding-bottom: 3px; }
+  .belongs input::placeholder { color: rgba(0,0,0,.12); }
   .ms-logo { position: absolute; left: 150px; top: 304px; width: 52px; height: 29px; object-fit: cover; }
   /* some participants don't see the Microsoft logo; with a link it stays hidden until their setting loads */
   /* participants with another partner company see its logo in place of Microsoft's */
@@ -162,25 +180,25 @@
   body.no-ms .ms, body.no-ms .ms-logo, body.ms-pending .ms, body.ms-pending .ms-logo { visibility: hidden; }
 
   /* ---------- cover ---------- */
-  #cover { position: absolute; left: 417px; top: 140px; width: 466px; height: 551px;
+  #cover { position: absolute; left: 417px; top: 132px; width: 466px; height: 608px;
     cursor: pointer; transform-origin: left center; transform-style: preserve-3d; z-index: 3; }
   #cover > .side { position: absolute; top: 0; height: 100%; backface-visibility: hidden; }
   #cover > .front { left: 0; width: 100%; background: var(--paper); }
   /* Inside of the cover: once swung over the spine it lands exactly on the binder's left half
      (binder x 184–640 ↔ cover x -9–447), drawn the same so the hand-off is seamless */
-  #cover > .rear { left: -9px; width: 456px; background: var(--intro); transform: rotateY(180deg); }
-  #cover > .rear > .slot { position: absolute; left: 12px; top: 12px; width: 432px; height: 527px; }
-  #cover .holes { left: 7px; top: calc(50% - 11.5px); --hole: #1b1b1b; }
-  #cover .margin { left: 24px; top: 8px; height: 528px; }
+  #cover > .rear { left: -3.5px; width: 466.5px; background: var(--intro); transform: rotateY(180deg); }
+  #cover > .rear > .slot { position: absolute; left: 28px; top: 19px; width: 432px; height: 527px; }
+  #cover .holes { left: 7px; top: calc(50% - 12px); --hole: #1b1b1b; }
+  #cover .margin { left: 24px; top: 8px; height: 577px; }
   #cover .hr { position: absolute; left: 25px; width: 439px; height: 1px; background: var(--rule); }
   .title { position: absolute; left: calc(50% + .5px); top: calc(50% - 50px); transform: translate(-50%, -50%);
     width: 101px; font-size: 40px; letter-spacing: -2.4px; line-height: 1.21; color: #000; }
   .title span { display: block; margin-bottom: -7px; }
-  #cover .gt { position: absolute; left: 183px; top: 270px; width: 38px; height: 21px; object-fit: cover; }
-  #cover .ms { position: absolute; left: 229px; top: 266px; width: 52px; height: 29px; object-fit: cover; }
-  #cover .foot { position: absolute; top: 529px; font-size: 9px; letter-spacing: .45px; }
+  #cover .gt { position: absolute; left: 183px; top: 297px; width: 38px; height: 21px; object-fit: cover; }
+  #cover .ms { position: absolute; left: 229px; top: 293px; width: 52px; height: 29px; object-fit: cover; }
+  #cover .foot { position: absolute; top: 579px; font-size: 9px; letter-spacing: .45px; }
 
-  /* Opening: cover slides right until its edge sits on the spine (+214px), then swings over it.
+  /* Opening: cover slides right until its edge sits on the spine (+226px), then swings over it.
      Closing plays the same steps backwards. */
   #binder, .paperclip { transition: opacity .25s; }
   .paperclip { z-index: 4; }
@@ -192,8 +210,8 @@
   /* the binder's left half only exists once the cover's inside lands on it */
   body:not(.closed) #binder { animation: binderLeftOpen 1.4s step-end forwards; }
   body.closed.was-open #binder { animation: binderLeftShut 1.4s step-start forwards; }
-  @keyframes binderLeftOpen { 0% { clip-path: inset(0 0 0 456px); } 100% { clip-path: inset(0); } }
-  @keyframes binderLeftShut { 0%, 100% { clip-path: inset(0 0 0 456px); } }
+  @keyframes binderLeftOpen { 0% { clip-path: inset(0 0 0 466px); } 100% { clip-path: inset(0); } }
+  @keyframes binderLeftShut { 0%, 100% { clip-path: inset(0 0 0 466px); } }
 
   /* Same physics as the page turn: lift, sag at the top of the arc, light falling off the
      sheet as it stands up, and a shadow on the page it uncovers */
@@ -201,15 +219,15 @@
   body.closed.was-open #cover { animation: coverShut 1.4s linear forwards; }
   @keyframes coverOpen {
     0%   { transform: none; animation-timing-function: cubic-bezier(.45,.05,.3,1); }
-    32%  { transform: translateX(214px); animation-timing-function: cubic-bezier(.4,0,.6,1); }
-    66%  { transform: translateX(214px) rotateY(-90deg) translateZ(14px) skewY(-1.5deg); animation-timing-function: cubic-bezier(.3,0,.25,1); }
-    99%  { transform: translateX(214px) rotateY(-180deg); visibility: visible; }
-    100% { transform: translateX(214px) rotateY(-180deg); visibility: hidden; }
+    32%  { transform: translateX(226px); animation-timing-function: cubic-bezier(.4,0,.6,1); }
+    66%  { transform: translateX(226px) rotateY(-90deg) translateZ(14px) skewY(-1.5deg); animation-timing-function: cubic-bezier(.3,0,.25,1); }
+    99%  { transform: translateX(226px) rotateY(-180deg); visibility: visible; }
+    100% { transform: translateX(226px) rotateY(-180deg); visibility: hidden; }
   }
   @keyframes coverShut {
-    0%   { transform: translateX(214px) rotateY(-180deg); animation-timing-function: cubic-bezier(.4,0,.6,1); }
-    34%  { transform: translateX(214px) rotateY(-90deg) translateZ(14px) skewY(-1.5deg); animation-timing-function: cubic-bezier(.3,0,.25,1); }
-    68%  { transform: translateX(214px); animation-timing-function: cubic-bezier(.45,.05,.3,1); }
+    0%   { transform: translateX(226px) rotateY(-180deg); animation-timing-function: cubic-bezier(.4,0,.6,1); }
+    34%  { transform: translateX(226px) rotateY(-90deg) translateZ(14px) skewY(-1.5deg); animation-timing-function: cubic-bezier(.3,0,.25,1); }
+    68%  { transform: translateX(226px); animation-timing-function: cubic-bezier(.45,.05,.3,1); }
     100% { transform: none; }
   }
   #cover .shade { position: absolute; inset: 0; pointer-events: none; opacity: 0; }
@@ -234,10 +252,10 @@
   body.closed.was-open #tabs { animation: tabsShut 1.4s linear forwards; }
   @keyframes tabsOpen {
     0%   { transform: none; animation-timing-function: cubic-bezier(.45,.05,.3,1); }
-    32%, 100% { transform: translateX(214px); }
+    32%, 100% { transform: translateX(229px); }
   }
   @keyframes tabsShut {
-    0%, 68% { transform: translateX(214px); animation-timing-function: cubic-bezier(.45,.05,.3,1); }
+    0%, 68% { transform: translateX(229px); animation-timing-function: cubic-bezier(.45,.05,.3,1); }
     100% { transform: none; }
   }
   .tab { position: absolute; left: 0; width: 19px; height: 81px; border: 0; cursor: pointer; background: var(--c);
@@ -304,12 +322,12 @@
   /* add-media button + menu, in binder coordinates from the design */
   .fab, .fab-menu { position: absolute; z-index: 6; background: var(--paper); border: 0; border-radius: 44px;
     box-shadow: 2.5px 2.5px 7.5px rgba(0,0,0,.25); }
-  .fab { left: 830px; top: 478.5px; width: 40px; height: 40px; display: grid; place-items: center; cursor: pointer;
+  .fab { left: 854px; top: 506.5px; width: 40px; height: 40px; display: grid; place-items: center; cursor: pointer;
     transition: transform .2s; }
   .fab img { transition: transform .2s; }
   .fab[aria-expanded="true"] img { transform: rotate(45deg); }
   .fab:hover { transform: scale(1.06); }
-  .fab-menu { left: 826px; top: 205px; width: 46px; padding: 18px 0; display: flex; flex-direction: column; gap: 18px;
+  .fab-menu { left: 850px; top: 233px; width: 46px; padding: 18px 0; display: flex; flex-direction: column; gap: 18px;
     transform-origin: 50% 100%; animation: menuIn .18s ease-out; }
   @keyframes menuIn { from { opacity: 0; transform: translateY(8px) scale(.95); } }
   .fab-menu button { display: flex; flex-direction: column; align-items: center; gap: 2px; border: 0; background: none;
@@ -318,13 +336,12 @@
   #binder:not(.can-add) .fab, #binder:not(.can-add) .fab-menu { display: none; }
 
   /* ---------- contact ---------- */
-  /* Figma 40:1161: help and contact buttons in the frame's bottom-right corner; the card opens above them */
-  .contact { position: absolute; z-index: 20; left: 1211px; top: 697px; width: 40px; display: flex; flex-direction: column; gap: 20px; }
+  /* help, task and contact buttons 40px from the window's bottom-right corner; the card opens above them */
+  .contact { position: fixed; z-index: 20; right: 40px; bottom: 40px; width: 40px; transform: scale(min(1, var(--k, 1))); transform-origin: 100% 100%; display: flex; flex-direction: column; gap: 20px; }
   .contact-card { position: absolute; right: 0; bottom: calc(100% + 12px); }
   .contact-btn { width: 40px; height: 40px; border-radius: 43.75px; border: 0; background: var(--paper);
     display: grid; place-items: center; cursor: pointer; box-shadow: 2.5px 2.5px 7.5px rgba(0,0,0,.25); transition: transform .15s; }
   .contact-btn:hover { transform: scale(1.08); }
-  #tourBtn { color: var(--ink); }
   .contact-btn:focus-visible, .contact-send:focus-visible { outline: 2px solid var(--intro); outline-offset: 2px; }
   .contact-card { width: 248px; background: var(--paper); color: var(--ink); padding: 16px 16px 14px;
     box-shadow: 2.5px 2.5px 12px rgba(0,0,0,.35); font-size: 12px; letter-spacing: -.3px; line-height: 1.45;
@@ -337,23 +354,17 @@
   .contact-send:hover { opacity: .85; }
 
   /* ---------- controls ---------- */
-  /* Figma 40:1153: ‹ Page n of m › under the binder */
-  .controls { position: absolute; left: calc(50% + .5px); top: 707px; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; z-index: 6; }
-  .controls button { width: 40px; height: 40px; border-radius: 43.75px; border: 0; background: var(--paper); cursor: pointer;
-    display: grid; place-items: center; box-shadow: 2.5px 2.5px 7.5px rgba(0,0,0,.25); transition: transform .15s, opacity .2s; }
-  .controls button:hover:not(:disabled) { transform: scale(1.08); }
-  .controls button:disabled { opacity: .3; cursor: default; }
-  #prev img { transform: rotate(90deg); }
+  /* Figma 57:2731: ‹ › sit on the binder's sides */
+    #prev img { transform: rotate(90deg); }
   #next img { transform: rotate(-90deg); }
-  .page-count { font-size: 16px; letter-spacing: -.96px; color: var(--paper); white-space: nowrap; min-width: 82px; text-align: center; }
-
+  
   /* Figma 40:1171: "<name>’s Diary ×" above the binder */
   .diary-head { position: absolute; left: 50%; top: 70px; transform: translateX(-50%); display: flex; align-items: flex-end; z-index: 6; transition: opacity .3s; }
   .diary-head h1 { font-weight: 400; font-size: 32px; letter-spacing: -1.92px; color: var(--paper); white-space: nowrap; }
   .diary-head button { width: 40px; height: 40px; border: 0; background: none; cursor: pointer; display: grid; place-items: center;
     filter: drop-shadow(2.5px 2.5px 3.75px rgba(0,0,0,.25)); transition: transform .15s; }
   .diary-head button:hover { transform: scale(1.1); }
-  body.closed .diary-head, body.closed .controls { opacity: 0; pointer-events: none; }
+  body.closed .diary-head { opacity: 0; pointer-events: none; }
 
   /* ---------- annotation editor (Figma 45:2007) ---------- */
   .annot { position: fixed; inset: 0; z-index: 40; background: rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; }
@@ -473,7 +484,8 @@
     font-size: 16px; line-height: 24px; letter-spacing: -.96px; color: #4b4b4b; }
   .task-card .tip { position: absolute; left: 230.5px; top: 408px; width: 305px; transform: translateX(-50%); text-align: center;
     font-size: 14px; line-height: 24px; letter-spacing: -.84px; color: rgba(75,75,75,.4); }
-  .task-card .shut { position: absolute; right: 8px; top: 4px; border: 0; background: none; font-size: 18px; color: #4b4b4b; cursor: pointer; padding: 2px 6px; }
+  .task-card .shut { position: absolute; right: 13px; top: 10px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: var(--paper); cursor: pointer;
+    display: grid; place-items: center; box-shadow: 2px 2px 6px rgba(0,0,0,.25); z-index: 2; }
 
   /* ---------- onboarding tour ---------- */
   .tour { position: fixed; inset: 0; z-index: 30; }
@@ -487,10 +499,10 @@
   .tour-card button.primary { background: var(--bg); color: var(--paper); }
 
   /* ---------- page-turn ---------- */
-  .turn { position: absolute; top: 152px; width: 432px; height: 527px; z-index: 5; pointer-events: none;
+  .turn { position: absolute; top: 159px; width: 432px; height: 527px; z-index: 5; pointer-events: none;
     transform-style: preserve-3d; --dur: .95s; }
-  .turn.fwd { left: 641px; transform-origin: -6.5px center; animation: turnFwd var(--dur) cubic-bezier(.3,.05,.25,1) forwards; }
-  .turn.back { left: 196px; transform-origin: 438.5px center; animation: turnBack var(--dur) cubic-bezier(.3,.05,.25,1) forwards; }
+  .turn.fwd { left: 653px; transform-origin: -6.5px center; animation: turnFwd var(--dur) cubic-bezier(.3,.05,.25,1) forwards; }
+  .turn.back { left: 208px; transform-origin: 438.5px center; animation: turnBack var(--dur) cubic-bezier(.3,.05,.25,1) forwards; }
   .turn .side { position: absolute; inset: 0; backface-visibility: hidden; }
   .turn .rear { transform: rotateY(180deg); }
   .turn .page { box-shadow: none; }
@@ -528,7 +540,7 @@
     <div class="holes"></div>
     <div class="margin"></div>
     <div class="hr" style="top:30px"></div>
-    <div class="hr" style="top:521px"></div>
+    <div class="hr" style="top:571px"></div>
     <div class="title"><span>Diary</span>Study</div>
     <img class="gt" src="assets/georgia-tech.png" alt="Georgia Tech">
     <img class="ms" src="assets/microsoft.png" alt="Microsoft">
@@ -544,6 +556,9 @@
     <div class="slot" id="right"></div>
     <button class="edge prev" id="edgePrev" aria-label="Previous page"><span>‹</span></button>
     <button class="edge next" id="edgeNext" aria-label="Next page"><span>›</span></button>
+    <button class="side-nav" id="prev" aria-label="Previous page"><img src="assets/icon-caret-prev.svg" alt="" width="24" height="24"></button>
+    <button class="side-nav" id="next" aria-label="Next page"><img src="assets/icon-caret-next.svg" alt="" width="24" height="24"></button>
+    <div class="binder-foot"><p class="page-count" id="pageCount" aria-live="polite"></p><p class="foot-hint" id="footHint"></p></div>
     <div class="fab-menu" id="fabMenu" hidden>
       <button data-pick="image"><img src="assets/icon-image.svg" alt="" width="16" height="16">Image</button>
       <button data-pick="file"><img src="assets/icon-file.svg" alt="" width="16" height="16">File</button>
@@ -556,7 +571,7 @@
     <input type="file" id="pick-file" multiple hidden>
     <input type="file" id="pick-video" accept="video/*" multiple hidden>
   </div>
-  <img class="paperclip" src="assets/paperclip.png" alt="" style="left:489px;top:120px">
+  <img class="paperclip" src="assets/paperclip.png" alt="" style="left:502px;top:111px;width:98px;height:122px">
 
   <div id="tabs"></div>
 
@@ -565,18 +580,13 @@
     <button id="close" aria-label="Close diary"><img src="assets/icon-close.svg" alt="" width="24" height="24"></button>
   </div>
 
-  <div class="controls">
-    <button id="prev" aria-label="Previous page"><img src="assets/icon-caret-prev.svg" alt="" width="24" height="24"></button>
-    <p class="page-count" id="pageCount" aria-live="polite"></p>
-    <button id="next" aria-label="Next page"><img src="assets/icon-caret-next.svg" alt="" width="24" height="24"></button>
-  </div>
 
 
   <div class="task" id="task" hidden>
     <div class="task-card" role="dialog" aria-labelledby="taskTitle">
       <img class="lines" src="assets/lined-paper.svg" alt="" width="481" height="457">
       <img class="red" src="assets/margin-line.svg" alt="" width="498" height="1">
-      <button class="shut" id="taskClose" aria-label="Close today’s task">×</button>
+      <button class="shut" id="taskClose" aria-label="Close today’s task"><img src="assets/icon-close-24.svg" alt="" width="20" height="20" style="pointer-events:none"></button>
       <div class="kicker">
         <button id="taskPrev" aria-label="Previous day’s task"><img src="assets/icon-caret-round-prev.svg" alt="" width="20" height="20" style="transform:rotate(90deg)"></button>
         <span id="taskLabel">Day 01</span>
@@ -588,23 +598,25 @@
   </div>
 
   <!-- Contact the researchers -->
-  <div class="contact">
-    <div class="contact-card" id="contactCard" role="dialog" aria-labelledby="contactTitle" hidden>
-      <p class="contact-title" id="contactTitle">Have a question?</p>
-      <p>Please contact your researchers here:</p>
-      <ul>
-        <li>vkumar438@gatech.edu</li>
-        <li>msabherwal3@gatech.edu</li>
-      </ul>
-      <a class="contact-send" href="mailto:vkumar438@gatech.edu,msabherwal3@gatech.edu?subject=Diary%20study%20question">Send email</a>
-    </div>
-    <button class="contact-btn" id="tourBtn" aria-label="Replay the tour" title="Replay the tour"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.75 12a8.25 8.25 0 1 0 2.42-5.83L3.75 8.6"/><path d="M3.75 3.75V8.6H8.6"/><path d="M10.5 9l4.5 3-4.5 3z"/></svg></button>
-    <button class="contact-btn" id="helpBtn" aria-label="See today’s task" title="See today’s task"><img src="assets/icon-question.svg" alt="" width="24" height="24"></button>
-    <button class="contact-btn" id="contactBtn" aria-label="Contact the researchers" aria-expanded="false">
-      <img src="assets/icon-envelope.svg" alt="" width="24" height="24">
-    </button>
   </div>
 </div>
+
+<!-- outside the scaled frame so it stays pinned to the window corner -->
+<div class="contact">
+  <div class="contact-card" id="contactCard" role="dialog" aria-labelledby="contactTitle" hidden>
+    <p class="contact-title" id="contactTitle">Have a question?</p>
+    <p>Please contact your researchers here:</p>
+    <ul>
+      <li>vkumar438@gatech.edu</li>
+      <li>msabherwal3@gatech.edu</li>
+    </ul>
+    <a class="contact-send" href="mailto:vkumar438@gatech.edu,msabherwal3@gatech.edu?subject=Diary%20study%20question">Send email</a>
+  </div>
+  <button class="contact-btn" id="tourBtn" aria-label="Replay the tour" title="Replay the tour"><img src="assets/icon-question.svg" alt="" width="24" height="24"></button>
+  <button class="contact-btn" id="helpBtn" aria-label="See today’s task" title="See today’s task"><img src="assets/icon-calendar-check.svg" alt="" width="24" height="24"></button>
+  <button class="contact-btn" id="contactBtn" aria-label="Contact the researchers" aria-expanded="false">
+    <img src="assets/icon-envelope.svg" alt="" width="24" height="24">
+  </button>
 
 <div class="gate" id="gate" hidden>
   <form class="gate-card" id="gateForm" role="dialog" aria-labelledby="gateHi" autocomplete="off">
@@ -845,7 +857,7 @@
   const showDate = iso => (/^(\d{4})-(\d\d)-(\d\d)$/.exec(iso || '') || []).slice(1).reverse().join('/');
   // Figma 40:592: a handwritten prompt on the left page, a hint along the bottom of the right
   const ROUGH_PROMPTS = {
-    l: ['Think out loud here! Half formed ideas, prompts you tried, what worked, what didn’t work', ''],
+    l: ['Think out loud here! Half formed ideas, prompts you tried, what worked, what didn’t work or even what surprised you.', ''],
     r: ['', 'Drop in screen recordings, sketches, files and more...'],
   };
   const frame = (side, inner) =>
@@ -864,7 +876,7 @@
        ${STICKERS.map(([c, src, tip]) => `<div class="sticker ${c}" tabindex="0"><img src="assets/${src}" alt="${esc(tip)}"><span class="tip">${tip}</span></div>`).join('')}
        <img class="reminder" src="assets/reminder-note.png" alt="Remember: We're not evaluating your AI skills. We're interested in how AI knowledge travels between designers - and what makes that journey easy, tricky, or surprising.">`,
       frame('r', `<div class="belongs"><p>This diary belongs to</p>
-         <input ${field('name')} value="${esc(saved.name)}" aria-label="Your name"></div>
+         <input ${field('name')} value="${esc(saved.name)}" placeholder="enter your name" aria-label="Your name"></div>
          <img class="ms-logo" src="assets/microsoft.png" alt="Microsoft">`),
     ];
     // day pages and their rough pages share the day's date; back-section rough spreads keep their own
@@ -942,7 +954,7 @@
   // the nearest open spread in a direction, skipping locked days
   const step = dir => { for (let i = current + dir; i >= 0 && i < sections.length; i += dir) if (isOpen(sections[i])) return i; return -1; };
   function drawNav() {
-    prevBtn.disabled = current < 0;
+    prevBtn.disabled = current <= 0;
     nextBtn.disabled = current >= 0 && step(1) < 0;
     edgePrev.disabled = current <= 0;
     edgeNext.disabled = nextBtn.disabled;
@@ -986,20 +998,20 @@
     });
   });
 
-  // Paper sound: only seconds 0.5–1.5 of the clip, with a short fade so it doesn't click off
-  const SOUND_FROM = .5, SOUND_TO = 1.5, FADE = .15;
+  // Paper sound: only seconds 1.12–2.3 of the clip (the first rustle), with a short fade so it doesn’t click off
+  const SOUND_FROM = 1.12, SOUND_TO = 2.3, FADE = .15, VOLUME = .3;
   const turnSound = new Audio('assets/page-turn.mp3');
   turnSound.preload = 'auto';
   let soundTimer;
   function playTurnSound() {
     clearInterval(soundTimer);
     turnSound.currentTime = SOUND_FROM;
-    turnSound.volume = 1;
+    turnSound.volume = VOLUME;
     turnSound.play().catch(() => {});
     soundTimer = setInterval(() => {
       const t = turnSound.currentTime;
       if (t >= SOUND_TO) { turnSound.pause(); clearInterval(soundTimer); }
-      else if (t > SOUND_TO - FADE) turnSound.volume = Math.max(0, (SOUND_TO - t) / FADE);
+      else if (t > SOUND_TO - FADE) turnSound.volume = VOLUME * Math.max(0, (SOUND_TO - t) / FADE);
     }, 20);
   }
 
@@ -1058,10 +1070,14 @@
   function drawPager() {
     const s = sections[current];
     const group = s ? sections.filter(x => x.tab === s.tab) : [];
-    pageCount.textContent = !s ? '' : s.kind === 'intro' ? 'Instructions' : `Page ${group.indexOf(s) + 1} of ${group.length}`;
+    pageCount.textContent = !s || s.kind === 'intro' ? '' : `Page ${group.indexOf(s) + 1} of ${group.length}`;
+    document.getElementById('footHint').textContent = !s ? '' : s.kind === 'intro' ? 'Please hover over each element to learn more'
+      : s.kind === 'rough' && s.day ? 'Don’t forget to add your rough notes for the day' : 'Don’t forget to add your rough notes here';
+    binder.classList.toggle('is-intro', s?.kind === 'intro');
   }
   const diaryName = document.getElementById('diaryName');
-  const drawName = () => { const n = (saved.name || '').trim(); diaryName.textContent = n ? `${n}’s Diary` : 'Your Diary'; };
+  // "ralston" shows as "Ralston’s Diary"
+  const drawName = () => { const n = (saved.name || '').trim(); diaryName.textContent = n ? `${n[0].toUpperCase() + n.slice(1)}’s Diary` : 'Your Diary'; };
   ready.then(drawName);
 
   // Adds a rough spread at the end of the current day (or of the back Rough section) and opens it
@@ -1767,14 +1783,14 @@
   // day or rough pages turn to that spread first.
   const TOUR = [
     { sel: '#tabs', title: 'Welcome to your diary', text: 'These tabs jump between the intro, each of the 5 days, and a spare Rough section at the back.' },
-    { sel: '.controls', title: 'Turning pages', text: 'Use the arrows (or ← → on your keyboard) to flip pages. The × next to your name closes the diary.' },
+    { sel: '#next', title: 'Turning pages', text: 'Use the arrows on the sides (or ← → on your keyboard) to flip pages. The × next to your name closes the diary.' },
     { sec: 'day', sel: '#left .mood', title: 'How did today go?', text: 'Each day, finish the line “Today my day was …” and tap the face that best matches it. Tap it again to clear it.' },
     { sec: 'day', sel: '#right .page-date', title: 'Date your entries', text: 'Click here to pick the date you’re writing on. Hover the day’s title to see that day’s task.' },
     { sec: 'day', sel: '#left .qs', title: 'Answer the questions', text: 'Type straight onto the page. Everything saves automatically as you go.' },
     { sec: 'day', sel: '.page-count', title: 'Pages within a day', text: 'Each day has a question spread followed by rough pages. This shows which page of the day you’re on.' },
     { sec: 'dayr', sel: '#binder', title: 'Rough pages are a canvas', text: 'Jot notes, then drag screenshots, videos, files and notes anywhere, even onto the facing page. Pull an item’s corner to resize it, and ✎ to draw on an image or video.' },
     { sec: 'dayr', sel: '#fab', title: 'Add things', text: 'Use + to add an image, file, video, sticky note, or a whole new rough page.', open: true },
-    { sel: '#helpBtn', title: 'You’re all set', text: 'Tap ? any time to see the day’s task, ↻ to replay this tour, or email your researchers with the envelope button.' },
+    { sel: '#helpBtn', title: 'You’re all set', text: 'Tap ? any time to replay this tour, the calendar to see the day’s task, or email your researchers with the envelope button.' },
   ];
   const tour = document.getElementById('tour'), tourSpot = document.getElementById('tourSpot'), tourCard = document.getElementById('tourCard');
   let tourAt = -1;
