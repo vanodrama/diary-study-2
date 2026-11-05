@@ -94,6 +94,7 @@
   .day-summary { position: absolute; left: 12px; top: 37px; width: 311px; height: 52px; border: 0; background: transparent;
     resize: none; outline: none; font: 12px Inter, sans-serif; letter-spacing: -.72px; color: var(--ink); }
   .day-summary::placeholder { color: #8a8a8a; }
+  .day-summary:not(:placeholder-shown) { opacity: .6; }
   .mood { position: absolute; left: 273px; top: 94px; width: 126px; height: 27px; display: flex; justify-content: space-between; align-items: center; }
   .mood button { width: 24px; height: 24px; border-radius: 50%; font-size: 17px; line-height: 24px; text-align: center;
     filter: grayscale(1); opacity: .5;
