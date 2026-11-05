@@ -463,6 +463,26 @@
     font: 16px Inter, sans-serif; letter-spacing: -.96px; text-align: center; color: var(--ink); text-transform: uppercase; padding: 0; }
   .gate-card .code input::placeholder { color: rgba(75,75,75,.2); }
   .gate-card .code input:focus { border-color: var(--ink); }
+  /* a correct code scrunches the card into a ball of paper, which drops away */
+  .gate-card.scrunch { pointer-events: none; animation: scrunch .8s cubic-bezier(.55, 0, .75, .5) forwards; }
+  .gate-card.scrunch::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; animation: creases .5s ease-in forwards;
+    background: linear-gradient(115deg, transparent 30%, rgba(0,0,0,.28) 32%, transparent 36%),
+      linear-gradient(62deg, transparent 52%, rgba(0,0,0,.24) 54%, transparent 58%),
+      linear-gradient(170deg, transparent 44%, rgba(255,255,255,.5) 46%, transparent 49%),
+      linear-gradient(20deg, transparent 22%, rgba(0,0,0,.2) 24%, transparent 28%); }
+  @keyframes creases { to { opacity: 1; } }
+  @keyframes scrunch {
+    0% { transform: translate(-50%, -50%) scale(var(--k, 1)) rotate(0);
+      clip-path: polygon(0 0, 25% 0, 50% 0, 75% 0, 100% 0, 100% 33%, 100% 66%, 100% 100%, 75% 100%, 50% 100%, 25% 100%, 0 100%, 0 66%, 0 33%); }
+    35% { transform: translate(-50%, -50%) scale(calc(var(--k, 1) * .72)) rotate(-5deg);
+      clip-path: polygon(4% 7%, 27% 2%, 46% 10%, 76% 3%, 96% 8%, 91% 32%, 98% 64%, 93% 95%, 72% 90%, 53% 98%, 24% 92%, 6% 97%, 10% 62%, 3% 36%); }
+    70% { transform: translate(-50%, -50%) scale(calc(var(--k, 1) * .34)) rotate(9deg);
+      clip-path: polygon(18% 20%, 32% 8%, 52% 22%, 70% 10%, 88% 24%, 78% 40%, 92% 66%, 76% 88%, 62% 76%, 46% 92%, 28% 80%, 12% 84%, 24% 58%, 8% 42%); }
+    86% { opacity: 1; transform: translate(-50%, -50%) scale(calc(var(--k, 1) * .2)) rotate(16deg);
+      clip-path: polygon(30% 26%, 42% 18%, 54% 28%, 66% 20%, 78% 34%, 70% 46%, 80% 62%, 68% 76%, 58% 68%, 46% 82%, 34% 72%, 24% 74%, 32% 56%, 22% 44%); }
+    100% { opacity: 0; transform: translate(-50%, 30vh) scale(calc(var(--k, 1) * .16)) rotate(40deg);
+      clip-path: polygon(30% 26%, 42% 18%, 54% 28%, 66% 20%, 78% 34%, 70% 46%, 80% 62%, 68% 76%, 58% 68%, 46% 82%, 34% 72%, 24% 74%, 32% 56%, 22% 44%); }
+  }
   .gate-card.wrong .code input { border-color: var(--rough); animation: shake .3s; }
   @keyframes shake { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
   /* Figma 42:1508: the short card for every later session */
@@ -1829,6 +1849,10 @@
       store1(localStorage, 'diary-token', token);
       store1(sessionStorage, 'diary-unlocked', '1');
       store1(localStorage, 'diary-welcomed', '1');
+      if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        gateForm.classList.add('scrunch');
+        await new Promise(r => setTimeout(r, 800));
+      }
       // welcome=1 plays the tour, only after the first-time card
       location.replace(location.pathname + '?t=' + encodeURIComponent(token) + (WELCOMED ? '' : '&welcome=1'));
     } catch {
