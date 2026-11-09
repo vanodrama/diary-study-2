@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Diary Study</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;500;600;700&family=Ojuju:wght@600&display=swap" rel="stylesheet">
 <style>
   :root {
     --ease: cubic-bezier(.2, .7, .2, 1);
@@ -500,6 +500,43 @@
     background: #000; color: #fff; font: 14px/24px Inter, sans-serif; cursor: pointer; transition: opacity .15s; }
   .gate-card .go:disabled { opacity: .5; cursor: default; }
 
+  /* ---------- Day 3 games (Figma 84:587) ---------- */
+  .game-tag { position: absolute; left: 11px; top: 11px; }
+  .game-tag.r { left: auto; right: 16px; }
+  .game-panel { position: absolute; top: 36px; width: 393px; height: 471px; overflow: hidden; }
+  .game-panel h2 { position: absolute; font: 600 70px Ojuju, sans-serif; letter-spacing: -1.54px; }
+  .game-panel.bingo { left: 11px; background: #fab0fb; }
+  .game-panel.bingo h2 { left: 14px; top: 5.5px; line-height: 1.01; color: #4a368d; }
+  .bingo-grid { position: absolute; left: 14px; top: 91px; display: grid; grid-template-columns: repeat(5, 70px); gap: 4px; }
+  .bingo-cell { width: 70px; height: 70px; padding: 2px 3px; border: 0; cursor: pointer; background: #fffdf6; color: #000; overflow: hidden;
+    font: 9px/1.1 'Helvetica Neue', Helvetica, Arial, sans-serif; transition: background .15s, color .15s; }
+  .bingo-cell:nth-child(even) { background: #def0ff; }
+  /* a ticked square keeps its text and colour, stamped with a smiley on top */
+  .bingo-cell { position: relative; }
+  .bingo-cell.on::after { content: ''; position: absolute; left: 50%; top: 50%; width: 48px; height: 48px; transform: translate(-50%, -50%);
+    background: url(assets/bingo-smiley.svg) center / contain no-repeat; pointer-events: none; animation: stamp .2s var(--ease); }
+  @keyframes stamp { from { opacity: 0; transform: translate(-50%, -50%) scale(1.4); } }
+  .game-panel.wyr { left: 23px; background: #10a77e; }
+  .game-panel.wyr h2 { left: 16px; top: 17.5px; width: 351px; line-height: .7; color: #fab0fb; }
+  .wyr-lead { position: absolute; left: 28px; top: 183.5px; font: 20px 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: .7; letter-spacing: -.44px; color: #fff; }
+  .wyr-card { position: absolute; top: 207.5px; width: 164px; height: 216px; border: 0; cursor: pointer; color: #000;
+    font: 14px/1.2 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+  /* the inner side leaves room for the OR badge */
+  .wyr-card.a { left: 28px; padding: 0 32px 0 14px; background: #fffdf6; }
+  .wyr-card.b { left: 197px; padding: 0 14px 0 32px; background: #def0ff; }
+  .wyr-card.on { box-shadow: inset 0 0 0 2px #0a7a5b; }
+  .bingo-pop { position: fixed; left: 50%; top: 50%; z-index: 9999; transform: translate(-50%, -50%) scale(calc(var(--k, 1)));
+    padding: 28px 56px; border-radius: 24px; background: #fab0fb; color: #4a368d; font: 600 72px/1 'Ojuju', sans-serif;
+    box-shadow: 0 12px 40px rgba(0,0,0,.25); cursor: pointer; animation: bingoIn .35s var(--ease); transition: opacity .3s; }
+  .bingo-pop.out { opacity: 0; }
+  @keyframes bingoIn { from { transform: translate(-50%, -50%) scale(calc(var(--k, 1) * .6)); opacity: 0; } }
+  .wyr-or { position: absolute; left: 169px; top: 290.5px; width: 55px; height: 50px; border-radius: 90px; background: #fab0fb; color: #4a368d;
+    display: grid; place-items: center; font: 600 30px Ojuju, sans-serif; letter-spacing: -.66px; pointer-events: none; }
+  .wyr-nav { position: absolute; left: 0; right: 0; top: 435px; display: flex; justify-content: center; align-items: center; gap: 10px; color: #fff; font: 12px Inter, sans-serif; }
+  .wyr-nav button { border: 0; background: none; color: inherit; font-size: 18px; cursor: pointer; }
+  .wyr-nav button:disabled { opacity: .3; cursor: default; }
+  #binder.is-games .binder-foot { color: #f0f1eb; }
+
   /* ---------- Day 5 submit + completion note ---------- */
   .binder-foot .submit-diary { position: absolute; right: 28px; top: -7px; height: 32px; padding: 0 16px; border: 0; border-radius: 4px;
     background: #000; color: #fff; font: 14px Inter, sans-serif; letter-spacing: -.42px; cursor: pointer; transition: transform .15s; }
@@ -776,6 +813,7 @@
       { id: 'intro', kind: 'intro', tab: 0 },
       ...[1, 2, 3, 4, 5].flatMap(day => [
         { id: 'd' + day, kind: 'day', day, tab: day },
+        ...(day === 3 ? [{ id: 'games', kind: 'games', day, tab: day }] : []),
         ...Array.from({ length: roughCount(`d${day}-rough-pages`, 1) }, (_, i) =>
           ({ id: `d${day}r${i ? i + 1 : ''}`, kind: 'rough', day, tab: day })),
       ]),
@@ -882,8 +920,14 @@
     })
     .catch(e => console.warn('could not load questions, using built-in copy', e));
 
+  // Day 3's games: prompts come from their own tables for everyone; answers are saved per tap
+  let games = { bingo: [], wyr: [] }, gameAnswers = { bingo: {}, wyr: {} }, wyrAt = 0;
+  const gamesLoaded = fetch(`${SUPA_URL}/rest/v1/rpc/load_games`, { method: 'POST', headers: { ...AUTH, 'Content-Type': 'application/json' }, body: '{}' })
+    .then(res => res.ok ? res.json() : Promise.reject(new Error(`load_games ${res.status}`)))
+    .then(g => { games = g; })
+    .catch(e => console.warn('could not load games', e));
   const ready = (async () => {
-    await questionsLoaded;
+    await Promise.all([questionsLoaded, gamesLoaded]);
     if (TOKEN) {
       try {
         const [name, rows, dayRows] = await Promise.all([rpc('load_my_name', {}), rpc('load_my_answers', {}), rpc('load_my_days', {})]);
@@ -894,6 +938,10 @@
           if (r.mood) saved[`d${r.day}-mood`] = String(r.mood);
         });
         online = true;
+        gameAnswers = await rpc('load_my_game_answers', {}).catch(() => gameAnswers);
+        // pick up at the first pair they haven't answered
+        const todo = games.wyr.findIndex(w => !gameAnswers.wyr[w.id]);
+        wyrAt = todo < 0 ? Math.max(0, games.wyr.length - 1) : todo;
         return;
       } catch (e) { console.warn('could not load saved answers, using local copy', e); }
     }
@@ -948,7 +996,26 @@
   const frame = (side, inner) =>
     `<div class="page ${side}"><div class="holes"></div><div class="margin"></div>${inner}</div>`;
 
+  const bingoHTML = () => games.bingo.map((b, i) =>
+    `<button class="bingo-cell${gameAnswers.bingo[b.id] ? ' on' : ''}" data-bingo="${b.id}" aria-pressed="${!!gameAnswers.bingo[b.id]}">${esc(b.prompt)}</button>`).join('');
+  function wyrHTML() {
+    const w = games.wyr[wyrAt];
+    if (!w) return '';
+    // Pull a shared "Have AI" / "Let AI" opener out of both cards into the lead, like the other pairs.
+    let lead = w.lead, text = { a: w.a, b: w.b };
+    const m = !lead && /^(Have|Let) AI\s+/i.exec(w.a), pre = m && new RegExp('^' + m[1] + ' AI\\s+', 'i');
+    if (m && pre.test(w.b)) { lead = m[1] + ' AI…'; text = { a: w.a.replace(pre, ''), b: w.b.replace(pre, '') }; text.a = text.a[0].toUpperCase() + text.a.slice(1); text.b = text.b[0].toUpperCase() + text.b.slice(1); }
+    const pick = gameAnswers.wyr[w.id], option = o => `<button class="wyr-card ${o}${pick === o ? ' on' : ''}" data-wyr="${o}" aria-pressed="${pick === o}">${esc(text[o])}</button>`;
+    const nav = games.wyr.length < 2 ? '' : `<div class="wyr-nav"><button data-wyr-step="-1" ${wyrAt ? '' : 'disabled'} aria-label="Previous pair">‹</button>
+      <span>${wyrAt + 1} of ${games.wyr.length}</span><button data-wyr-step="1" ${wyrAt < games.wyr.length - 1 ? '' : 'disabled'} aria-label="Next pair">›</button></div>`;
+    return `<p class="wyr-lead">${esc(lead)}</p>${option('a')}${option('b')}<span class="wyr-or">OR</span>${nav}`;
+  }
   function pages(s) {
+    // Figma 84:587
+    if (s.kind === 'games') return [
+      frame('l', `<p class="mono game-tag">[ Games ]</p><div class="game-panel bingo"><h2>Bingo</h2><div class="bingo-grid">${bingoHTML()}</div></div>`),
+      frame('r', `<p class="mono game-tag r">[ Games ]</p><div class="game-panel wyr"><h2>Would you rather...</h2><div id="wyrBody">${wyrHTML()}</div></div>`),
+    ];
     if (s.id === 'intro') return [
       `<div class="holes intro-holes"></div><div class="card-hello"><h2>Welcome to your AI Workflow Diary!</h2>
          <p class="lede">Over the next 5 days, you'll explore an AI workflow, share it with a fellow designer, and try adapting theirs to your own work.</p>
@@ -1157,8 +1224,9 @@
     pageCount.textContent = !s || s.kind === 'intro' ? '' : `Page ${group.indexOf(s) + 1} of ${group.length}`;
     // Figma 57:2732 / 57:2912: the reminder doubles as a shortcut
     document.getElementById('footHint').textContent = !s ? '' : s.kind === 'intro' ? 'Please hover over each element to learn more'
-      : s.kind === 'day' ? 'Add your rough notes on the next page' : 'Need more space? Add another rough page';
+      : s.kind === 'day' || s.kind === 'games' ? 'Add your rough notes on the next page' : 'Need more space? Add another rough page';
     binder.classList.toggle('is-intro', s?.kind === 'intro');
+    binder.classList.toggle('is-games', s?.kind === 'games');
     document.getElementById('submitDiary').hidden = s?.day !== 5;
   }
   const diaryName = document.getElementById('diaryName');
@@ -1166,11 +1234,13 @@
   const drawName = () => { const n = (saved.name || '').trim(); diaryName.textContent = n ? `${n[0].toUpperCase() + n.slice(1)}’s Diary` : 'Your Diary'; };
   ready.then(drawName);
 
+  // the first rough spread of the current tab (Day 3 has the games spread in between)
+  const firstRough = () => sections.findIndex(x => x.tab === sections[current].tab && x.kind === 'rough');
   // questions page: turn to the day's rough page; rough page: add another one
   document.getElementById('footHint').onclick = () => {
     const s = sections[current];
-    if (s?.kind === 'day') go(current + 1);
-    else if (s?.kind === 'rough') addRoughPage();
+    if (s?.kind === 'rough') addRoughPage();
+    else if (s && s.kind !== 'intro') go(firstRough());
   };
 
   // Adds a rough spread at the end of the current day (or of the back Rough section) and opens it
@@ -1335,12 +1405,12 @@
 
   // Media added from a day's question spread lands on that day's first rough spread
   function roughPage() {
-    if (sections[current].kind === 'day') go(current + 1);
+    if (sections[current].kind !== 'rough') go(firstRough());
     return `${sections[current].id}-l`;
   }
 
   async function addFiles(files, kind) {
-    const turning = sections[current].kind === 'day';
+    const turning = sections[current].kind !== 'rough';
     const page = roughPage();
     let last;
     for (const f of files) {
@@ -1886,6 +1956,42 @@
   });
   binder.addEventListener('click', e => { const t = e.target.closest('[data-task]'); if (t) showTask(+t.dataset.task); });
 
+  // ---------- Day 3 games ----------
+  // A tap shows at once and saves a moment later; if the save fails it is undone and they can retry
+  const BINGO_LINES = [0, 1, 2, 3, 4].flatMap(i => [[0, 1, 2, 3, 4].map(n => i * 5 + n), [0, 1, 2, 3, 4].map(n => n * 5 + i)])
+    .concat([[0, 6, 12, 18, 24], [4, 8, 12, 16, 20]]);
+  const madeLine = i => BINGO_LINES.some(l => l.includes(i) && l.every(n => gameAnswers.bingo[games.bingo[n]?.id]));
+  // Quick repeat taps send only the last answer, so saves can't land out of order
+  const gameTimers = {};
+  const saveGame = (key, send, undo) => {
+    clearTimeout(gameTimers[key]);
+    gameTimers[key] = setTimeout(() => send().catch(err => { undo(); gameSaveFailed(err); }), 300);
+  };
+  const gameSaveFailed = e => { console.warn('game answer not saved', e); alert('Couldn’t save that. Check your connection and try again.'); };
+  binder.addEventListener('click', async e => {
+    const cell = e.target.closest('[data-bingo]'), card = e.target.closest('[data-wyr]'), step = e.target.closest('[data-wyr-step]');
+    if (step) { wyrAt += +step.dataset.wyrStep; document.querySelectorAll('#wyrBody').forEach(b => b.innerHTML = wyrHTML()); }
+    if (cell) {
+      const id = cell.dataset.bingo, was = !!gameAnswers.bingo[id], now = !was;
+      const paint = v => { cell.classList.toggle('on', v); cell.setAttribute('aria-pressed', v); };
+      gameAnswers.bingo[id] = now; paint(now);
+      const lines = () => BINGO_LINES.filter(l => l.every(n => gameAnswers.bingo[games.bingo[n]?.id])).length;
+      gameAnswers.bingo[id] = was; const before = lines(); gameAnswers.bingo[id] = now;
+      if (now && before < 5 && lines() >= 5) bingoPop();
+      else if (now && madeLine(games.bingo.findIndex(b => String(b.id) === id))) confetti();
+      if (TOKEN) saveGame('b' + id, () => rpc('save_bingo', { p_prompt_id: +id, p_checked: gameAnswers.bingo[id] }), () => { gameAnswers.bingo[id] = was; paint(was); });
+    }
+    if (card) {
+      const w = games.wyr[wyrAt], was = gameAnswers.wyr[w.id], now = card.dataset.wyr;
+      const paint = () => document.querySelectorAll('#wyrBody').forEach(b => b.innerHTML = wyrHTML());
+      gameAnswers.wyr[w.id] = now; paint();
+      // a beat to see the choice, then on to the next pair
+      const at = wyrAt;
+      setTimeout(() => { if (wyrAt === at && at < games.wyr.length - 1) { wyrAt++; paint(); } }, 500);
+      if (TOKEN) saveGame('w' + w.id, () => rpc('save_wyr', { p_prompt_id: w.id, p_choice: gameAnswers.wyr[w.id] }), () => { gameAnswers.wyr[w.id] = was; paint(); });
+    }
+  });
+
   // ---------- Day 5: submit the diary ----------
   // Records the submission (participants.submitted_at), then celebrates. Submitting again just
   // updates the time.
@@ -1907,6 +2013,14 @@
   done.addEventListener('click', e => { if (e.target === done || e.target.id === 'doneClose') done.hidden = true; });
 
   // Confetti bursts up and inward from the bottom-left and bottom-right corners
+  // Five full lines: a "Bingo!" popup with confetti; tap or wait to close
+  function bingoPop() {
+    confetti();
+    const el = document.createElement('div'); el.className = 'bingo-pop'; el.setAttribute('role', 'status'); el.textContent = 'Bingo!';
+    document.body.appendChild(el);
+    const close = () => { el.classList.add('out'); setTimeout(() => el.remove(), 300); };
+    el.addEventListener('click', close); setTimeout(close, 2600);
+  }
   function confetti() {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const cv = document.getElementById('confetti'), ctx = cv.getContext('2d'), dpr = devicePixelRatio || 1;
